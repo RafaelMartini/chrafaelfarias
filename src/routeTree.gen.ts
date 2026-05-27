@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BibliotecaRouteImport } from './routes/biblioteca'
 import { Route as AlunosRouteImport } from './routes/alunos'
 import { Route as AlunoRouteImport } from './routes/aluno'
@@ -27,6 +28,11 @@ const SignupRoute = SignupRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BibliotecaRoute = BibliotecaRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/aluno': typeof AlunoRouteWithChildren
   '/alunos': typeof AlunosRoute
   '/biblioteca': typeof BibliotecaRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/aluno/agenda': typeof AlunoAgendaRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/aluno': typeof AlunoRouteWithChildren
   '/alunos': typeof AlunosRoute
   '/biblioteca': typeof BibliotecaRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/aluno/agenda': typeof AlunoAgendaRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/aluno': typeof AlunoRouteWithChildren
   '/alunos': typeof AlunosRoute
   '/biblioteca': typeof BibliotecaRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/aluno/agenda': typeof AlunoAgendaRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/aluno'
     | '/alunos'
     | '/biblioteca'
+    | '/dashboard'
     | '/login'
     | '/signup'
     | '/aluno/agenda'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/aluno'
     | '/alunos'
     | '/biblioteca'
+    | '/dashboard'
     | '/login'
     | '/signup'
     | '/aluno/agenda'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/aluno'
     | '/alunos'
     | '/biblioteca'
+    | '/dashboard'
     | '/login'
     | '/signup'
     | '/aluno/agenda'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   AlunoRoute: typeof AlunoRouteWithChildren
   AlunosRoute: typeof AlunosRoute
   BibliotecaRoute: typeof BibliotecaRoute
+  DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
 }
@@ -159,6 +172,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/biblioteca': {
@@ -231,6 +251,7 @@ const rootRouteChildren: RootRouteChildren = {
   AlunoRoute: AlunoRouteWithChildren,
   AlunosRoute: AlunosRoute,
   BibliotecaRoute: BibliotecaRoute,
+  DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
 }
