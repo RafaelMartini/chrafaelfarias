@@ -1,5 +1,5 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import logo from "@/assets/logo-rafael-faria.png";
 
