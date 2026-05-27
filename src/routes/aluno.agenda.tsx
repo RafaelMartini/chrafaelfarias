@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Shell } from "@/components/Shell";
 
 export const Route = createFileRoute("/aluno/agenda")({
-  head: () => ({ meta: [{ title: "Minha Agenda — KINETIC+" }] }),
+  head: () => ({ meta: [{ title: "Minha Agenda — Rafael Faria" }] }),
   component: StudentAgenda,
 });
 

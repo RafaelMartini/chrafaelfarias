@@ -3,7 +3,7 @@ import { Shell } from "@/components/Shell";
 import { appointments } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/agenda")({
-  head: () => ({ meta: [{ title: "Agenda — KINETIC+" }] }),
+  head: () => ({ meta: [{ title: "Agenda — Rafael Faria" }] }),
   component: AgendaPage,
 });
 

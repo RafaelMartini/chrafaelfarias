@@ -7,7 +7,7 @@ import logo from "@/assets/logo-rafael-faria.png";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "KINETIC+ — Treinos personalizados com seu personal" },
+      { title: "Rafael Faria — Treinos personalizados com seu personal" },
       { name: "description", content: "Plataforma exclusiva com treinos montados manualmente, vídeos demonstrativos e acompanhamento real da sua performance." },
     ],
   }),
@@ -122,7 +122,7 @@ function Landing() {
 
       <footer className="relative z-10 border-t border-border py-8 px-6 text-center">
         <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
-          © 2026 KINETIC+ Performance Systems
+          © 2026 Rafael Faria Performance Systems
         </p>
       </footer>
     </div>

@@ -3,7 +3,7 @@ import { Shell } from "@/components/Shell";
 import { students } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/alunos")({
-  head: () => ({ meta: [{ title: "Alunos — KINETIC+" }] }),
+  head: () => ({ meta: [{ title: "Alunos — Rafael Faria" }] }),
   component: AlunosPage,
 });
 

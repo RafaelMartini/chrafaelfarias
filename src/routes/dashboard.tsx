@@ -5,7 +5,7 @@ import { students, appointments } from "@/lib/mock-data";
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
-      { title: "KINETIC+ — Painel do Personal" },
+      { title: "Rafael Faria — Painel do Personal" },
       { name: "description", content: "Plataforma de gestão de alta performance para personal trainers." },
     ],
   }),

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Shell, MetricCard } from "@/components/Shell";
 
 export const Route = createFileRoute("/aluno/progresso")({
-  head: () => ({ meta: [{ title: "Meu Progresso — KINETIC+" }] }),
+  head: () => ({ meta: [{ title: "Meu Progresso — Rafael Faria" }] }),
   component: Progresso,
 });
 
