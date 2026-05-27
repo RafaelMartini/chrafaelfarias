@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as BibliotecaRouteImport } from './routes/biblioteca'
 import { Route as AlunosRouteImport } from './routes/alunos'
 import { Route as AlunoRouteImport } from './routes/aluno'
@@ -17,6 +19,16 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AlunoProgressoRouteImport } from './routes/aluno.progresso'
 import { Route as AlunoAgendaRouteImport } from './routes/aluno.agenda'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BibliotecaRoute = BibliotecaRouteImport.update({
   id: '/biblioteca',
   path: '/biblioteca',
@@ -59,6 +71,8 @@ export interface FileRoutesByFullPath {
   '/aluno': typeof AlunoRouteWithChildren
   '/alunos': typeof AlunosRoute
   '/biblioteca': typeof BibliotecaRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
   '/aluno/agenda': typeof AlunoAgendaRoute
   '/aluno/progresso': typeof AlunoProgressoRoute
 }
@@ -68,6 +82,8 @@ export interface FileRoutesByTo {
   '/aluno': typeof AlunoRouteWithChildren
   '/alunos': typeof AlunosRoute
   '/biblioteca': typeof BibliotecaRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
   '/aluno/agenda': typeof AlunoAgendaRoute
   '/aluno/progresso': typeof AlunoProgressoRoute
 }
@@ -78,6 +94,8 @@ export interface FileRoutesById {
   '/aluno': typeof AlunoRouteWithChildren
   '/alunos': typeof AlunosRoute
   '/biblioteca': typeof BibliotecaRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
   '/aluno/agenda': typeof AlunoAgendaRoute
   '/aluno/progresso': typeof AlunoProgressoRoute
 }
@@ -89,6 +107,8 @@ export interface FileRouteTypes {
     | '/aluno'
     | '/alunos'
     | '/biblioteca'
+    | '/login'
+    | '/signup'
     | '/aluno/agenda'
     | '/aluno/progresso'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +118,8 @@ export interface FileRouteTypes {
     | '/aluno'
     | '/alunos'
     | '/biblioteca'
+    | '/login'
+    | '/signup'
     | '/aluno/agenda'
     | '/aluno/progresso'
   id:
@@ -107,6 +129,8 @@ export interface FileRouteTypes {
     | '/aluno'
     | '/alunos'
     | '/biblioteca'
+    | '/login'
+    | '/signup'
     | '/aluno/agenda'
     | '/aluno/progresso'
   fileRoutesById: FileRoutesById
@@ -117,10 +141,26 @@ export interface RootRouteChildren {
   AlunoRoute: typeof AlunoRouteWithChildren
   AlunosRoute: typeof AlunosRoute
   BibliotecaRoute: typeof BibliotecaRoute
+  LoginRoute: typeof LoginRoute
+  SignupRoute: typeof SignupRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/biblioteca': {
       id: '/biblioteca'
       path: '/biblioteca'
@@ -191,6 +231,8 @@ const rootRouteChildren: RootRouteChildren = {
   AlunoRoute: AlunoRouteWithChildren,
   AlunosRoute: AlunosRoute,
   BibliotecaRoute: BibliotecaRoute,
+  LoginRoute: LoginRoute,
+  SignupRoute: SignupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
