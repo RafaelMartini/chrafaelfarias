@@ -65,7 +65,7 @@ function SignupPage() {
     <div className="min-h-screen flex items-center justify-center px-6 bg-background py-12">
       <div className="w-full max-w-md">
         <Link to="/" className="inline-block">
-          <img src={logo} alt="Coach Rafael Faria" className="h-20 w-auto" />
+          <img src={logo} alt="Coach Rafael Faria" className="h-28 w-auto" />
         </Link>
         <h1 className="mt-10 text-4xl font-extrabold uppercase tracking-tight">Criar conta</h1>
         <p className="mt-2 text-sm text-muted-foreground font-mono uppercase">Comece sua jornada de performance</p>
