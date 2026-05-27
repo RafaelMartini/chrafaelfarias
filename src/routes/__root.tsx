@@ -73,7 +73,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "KINETIC+ — Plataforma de Personal Training" },
+      { title: "Rafael Faria — Plataforma de Personal Training" },
       { name: "description", content: "Ecossistema fitness completo para personal trainers e alunos." },
       { property: "og:type", content: "website" },
     ],

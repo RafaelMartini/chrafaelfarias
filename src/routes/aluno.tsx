@@ -3,7 +3,7 @@ import { Shell } from "@/components/Shell";
 import { weekWorkouts, exercises, appointments } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/aluno")({
-  head: () => ({ meta: [{ title: "Meu Treino — KINETIC+" }] }),
+  head: () => ({ meta: [{ title: "Meu Treino — Rafael Faria" }] }),
   component: AlunoPage,
 });
 

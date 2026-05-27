@@ -3,7 +3,7 @@ import { Shell } from "@/components/Shell";
 import { exercises } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/biblioteca")({
-  head: () => ({ meta: [{ title: "Biblioteca de Exercícios — KINETIC+" }] }),
+  head: () => ({ meta: [{ title: "Biblioteca de Exercícios — Rafael Faria" }] }),
   component: BibliotecaPage,
 });
 

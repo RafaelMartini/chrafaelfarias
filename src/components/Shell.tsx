@@ -79,7 +79,7 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
 
       <footer className="border-t border-border mt-20 py-12 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="text-xs font-mono text-muted-foreground uppercase">© 2026 KINETIC+ PERFORMANCE SYSTEMS</div>
+          <div className="text-xs font-mono text-muted-foreground uppercase">© 2026 Rafael Faria PERFORMANCE SYSTEMS</div>
           <div className="flex gap-8">
             <a href="#" className="text-xs font-extrabold uppercase tracking-widest hover:text-accent">Privacidade</a>
             <a href="#" className="text-xs font-extrabold uppercase tracking-widest hover:text-accent">Termos</a>

@@ -4,9 +4,10 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/use-auth";
+import logo from "@/assets/logo-rafael-faria.png";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Entrar — KINETIC+" }] }),
+  head: () => ({ meta: [{ title: "Entrar — Rafael Faria" }] }),
   component: LoginPage,
 });
 
@@ -56,8 +57,8 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-6 bg-background">
       <div className="w-full max-w-md">
-        <Link to="/" className="text-2xl font-extrabold tracking-tighter uppercase italic">
-          KINETIC<span className="text-accent">+</span>
+        <Link to="/" className="inline-block">
+          <img src={logo} alt="Coach Rafael Faria" className="h-12 w-auto" />
         </Link>
         <h1 className="mt-10 text-4xl font-extrabold uppercase tracking-tight">Entrar</h1>
         <p className="mt-2 text-sm text-muted-foreground font-mono uppercase">Acesse seu painel de performance</p>
