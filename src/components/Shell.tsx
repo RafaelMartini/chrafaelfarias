@@ -3,7 +3,7 @@ import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 
 const adminNav = [
-  { label: "Dashboard", to: "/" },
+  { label: "Dashboard", to: "/dashboard" },
   { label: "Alunos", to: "/alunos" },
   { label: "Biblioteca", to: "/biblioteca" },
   { label: "Agenda", to: "/agenda" },
@@ -37,7 +37,7 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
     <div className="min-h-screen">
       <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="flex items-center gap-8">
-          <Link to="/" className="text-xl font-extrabold tracking-tighter uppercase italic">
+          <Link to={mode === "admin" ? "/dashboard" : "/aluno"} className="text-xl font-extrabold tracking-tighter uppercase italic">
             KINETIC<span className="text-accent">+</span>
           </Link>
           <div className="hidden md:flex gap-6 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -57,7 +57,7 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
         </div>
         <div className="flex items-center gap-3">
           <Link
-            to={mode === "admin" ? "/aluno" : "/"}
+            to={mode === "admin" ? "/aluno" : "/dashboard"}
             className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-accent hover:text-accent transition-colors"
           >
             {mode === "admin" ? "Ver portal aluno" : "Painel admin"}
