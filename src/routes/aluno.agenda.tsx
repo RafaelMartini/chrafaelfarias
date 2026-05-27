@@ -24,9 +24,9 @@ function StudentAgenda() {
 
       <div className="grid md:grid-cols-2 gap-4 animate-reveal [animation-delay:100ms]">
         {slots.map((s) => (
-          <div key={s.date} className="bg-surface border border-border p-6">
+          <div key={s.date} className="bg-surface border border-border p-6 rounded-2xl">
             <div className="flex items-center gap-4 mb-5">
-              <div className="flex flex-col items-center bg-background border border-border w-14 py-2">
+              <div className="flex flex-col items-center bg-background border border-border w-14 py-2 rounded-2xl">
                 <span className="text-[10px] font-mono text-muted-foreground uppercase">{s.date.split(" ")[0]}</span>
                 <span className="text-lg font-extrabold">{s.date.split(" ")[1]}</span>
               </div>
@@ -34,7 +34,7 @@ function StudentAgenda() {
             </div>
             <div className="space-y-2">
               {s.times.map((t) => (
-                <button key={t} className="w-full text-left px-4 py-3 border border-border font-mono text-xs uppercase hover:border-accent hover:bg-accent hover:text-background transition-colors">
+                <button key={t} className="w-full text-left px-4 py-3 border border-border font-mono text-xs uppercase hover:border-accent hover:bg-accent hover:text-background transition-colors rounded-2xl">
                   {t}
                 </button>
               ))}

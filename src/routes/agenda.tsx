@@ -28,7 +28,7 @@ function AgendaPage() {
           <p className="text-xs font-mono uppercase tracking-[0.2em] text-accent mb-2">Calendário</p>
           <h1 className="text-4xl font-extrabold uppercase tracking-tight">Agenda Semanal</h1>
         </div>
-        <div className="flex border border-border">
+        <div className="flex border border-border rounded-2xl">
           <button className="px-4 py-2 text-[10px] font-mono uppercase tracking-widest bg-accent text-background">Semana</button>
           <button className="px-4 py-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground">Mês</button>
         </div>
@@ -59,9 +59,9 @@ function AgendaPage() {
         <h2 className="text-2xl font-extrabold uppercase tracking-tighter mb-6">Próximos Agendamentos</h2>
         <div className="space-y-2">
           {appointments.map((a) => (
-            <div key={a.id} className="bg-surface border border-border p-4 flex items-center justify-between hover:border-accent/40 transition-colors">
+            <div key={a.id} className="bg-surface border border-border p-4 flex items-center justify-between hover:border-accent/40 transition-colors rounded-2xl">
               <div className="flex items-center gap-5">
-                <div className="flex flex-col items-center bg-background border border-border w-14 py-2">
+                <div className="flex flex-col items-center bg-background border border-border w-14 py-2 rounded-2xl">
                   <span className="text-[10px] font-mono text-muted-foreground uppercase">{a.date.split(" ")[0]}</span>
                   <span className="text-lg font-extrabold">{a.date.split(" ")[1]}</span>
                 </div>

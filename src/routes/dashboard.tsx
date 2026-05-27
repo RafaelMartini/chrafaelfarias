@@ -32,7 +32,7 @@ function AdminDashboard() {
           <MetricCard label="Alunos Ativos" value="42" hint="+12% este mês" />
           <MetricCard label="Frequência Semanal" value="88" suffix="%" hint="156 check-ins registrados" />
           <MetricCard label="Taxa de Conclusão" value="94" suffix="%" hint="Retenção acima da média" />
-          <div className="bg-surface p-6 border border-accent/30 bg-accent/5">
+          <div className="bg-surface p-6 border border-accent/30 bg-accent/5 rounded-2xl">
             <p className="text-xs font-mono uppercase text-accent mb-4">Próxima Sessão</p>
             <div className="text-xl font-extrabold uppercase leading-none">{nextAppt.time} — {nextAppt.student.split(" ")[0]}</div>
             <p className="text-sm mt-2 text-foreground/80">{nextAppt.location}</p>
@@ -45,15 +45,15 @@ function AdminDashboard() {
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-extrabold uppercase tracking-tighter">Roster de Alunos</h2>
-            <Link to="/alunos" className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-accent hover:text-accent transition-colors">
+            <Link to="/alunos" className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-accent hover:text-accent transition-colors rounded-2xl">
               Ver todos →
             </Link>
           </div>
           <div className="space-y-2">
             {students.slice(0, 5).map((s) => (
-              <div key={s.id} className="bg-surface p-4 border border-border flex items-center justify-between group hover:border-accent/40 transition-all">
+              <div key={s.id} className="bg-surface p-4 border border-border flex items-center justify-between group hover:border-accent/40 transition-all rounded-2xl">
                 <div className="flex items-center gap-4">
-                  <div className="size-12 bg-background border border-border flex items-center justify-center font-mono text-xs text-accent">{s.initials}</div>
+                  <div className="size-12 bg-background border border-border flex items-center justify-center font-mono text-xs text-accent rounded-2xl">{s.initials}</div>
                   <div>
                     <p className="font-bold uppercase tracking-tight">{s.name}</p>
                     <p className="text-xs text-muted-foreground font-mono">{s.plan} • {s.week}</p>
@@ -75,10 +75,10 @@ function AdminDashboard() {
 
         <div className="space-y-6">
           <h2 className="text-2xl font-extrabold uppercase tracking-tighter">Agenda Hoje</h2>
-          <div className="bg-surface border border-border p-6 space-y-5">
+          <div className="bg-surface border border-border p-6 space-y-5 rounded-2xl">
             {appointments.slice(0, 3).map((a) => (
               <div key={a.id} className="flex gap-4">
-                <div className="flex flex-col items-center bg-background border border-border w-14 py-2 shrink-0">
+                <div className="flex flex-col items-center bg-background border border-border w-14 py-2 shrink-0 rounded-2xl">
                   <span className="text-[10px] font-mono text-muted-foreground uppercase">{a.date.split(" ")[0]}</span>
                   <span className="text-lg font-extrabold">{a.date.split(" ")[1]}</span>
                 </div>

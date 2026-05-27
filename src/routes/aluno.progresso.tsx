@@ -22,13 +22,13 @@ function Progresso() {
       </div>
 
       <section className="mt-12 grid lg:grid-cols-2 gap-6 animate-reveal [animation-delay:200ms]">
-        <div className="bg-surface border border-border p-8">
+        <div className="bg-surface border border-border p-8 rounded-2xl">
           <h2 className="text-lg font-extrabold uppercase mb-6">Evolução de Carga</h2>
-          <div className="aspect-[2/1] bg-background/30 border border-border/50 grid place-items-center font-mono text-xs text-muted-foreground uppercase">
+          <div className="aspect-[2/1] bg-background/30 border border-border/50 grid place-items-center font-mono text-xs text-muted-foreground uppercase rounded-2xl">
             histórico de cargas
           </div>
         </div>
-        <div className="bg-surface border border-border p-8">
+        <div className="bg-surface border border-border p-8 rounded-2xl">
           <h2 className="text-lg font-extrabold uppercase mb-6">Composição Corporal</h2>
           <div className="space-y-5">
             {[
