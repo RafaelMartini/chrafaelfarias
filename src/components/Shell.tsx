@@ -1,5 +1,6 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, type ReactNode } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 const adminNav = [
   { label: "Dashboard", to: "/" },
@@ -17,6 +18,20 @@ const studentNav = [
 export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?: "admin" | "student" }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const nav = mode === "admin" ? adminNav : studentNav;
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: "/login", replace: true });
+  }, [loading, user, navigate]);
+
+  const initials = (user?.user_metadata?.display_name || user?.email || "")
+    .toString()
+    .split(" ")
+    .map((p: string) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || (mode === "admin" ? "PH" : "MS");
 
   return (
     <div className="min-h-screen">
@@ -47,8 +62,14 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
           >
             {mode === "admin" ? "Ver portal aluno" : "Painel admin"}
           </Link>
+          <button
+            onClick={() => signOut()}
+            className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-destructive hover:text-destructive transition-colors"
+          >
+            Sair
+          </button>
           <div className="size-8 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-[10px] font-mono text-accent">
-            {mode === "admin" ? "PH" : "MS"}
+            {initials}
           </div>
         </div>
       </nav>
