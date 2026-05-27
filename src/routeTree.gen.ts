@@ -9,38 +9,146 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as BibliotecaRouteImport } from './routes/biblioteca'
+import { Route as AlunosRouteImport } from './routes/alunos'
+import { Route as AlunoRouteImport } from './routes/aluno'
+import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AlunoProgressoRouteImport } from './routes/aluno.progresso'
+import { Route as AlunoAgendaRouteImport } from './routes/aluno.agenda'
 
+const BibliotecaRoute = BibliotecaRouteImport.update({
+  id: '/biblioteca',
+  path: '/biblioteca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlunosRoute = AlunosRouteImport.update({
+  id: '/alunos',
+  path: '/alunos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlunoRoute = AlunoRouteImport.update({
+  id: '/aluno',
+  path: '/aluno',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgendaRoute = AgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AlunoProgressoRoute = AlunoProgressoRouteImport.update({
+  id: '/progresso',
+  path: '/progresso',
+  getParentRoute: () => AlunoRoute,
+} as any)
+const AlunoAgendaRoute = AlunoAgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
+  getParentRoute: () => AlunoRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
+  '/aluno': typeof AlunoRouteWithChildren
+  '/alunos': typeof AlunosRoute
+  '/biblioteca': typeof BibliotecaRoute
+  '/aluno/agenda': typeof AlunoAgendaRoute
+  '/aluno/progresso': typeof AlunoProgressoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
+  '/aluno': typeof AlunoRouteWithChildren
+  '/alunos': typeof AlunosRoute
+  '/biblioteca': typeof BibliotecaRoute
+  '/aluno/agenda': typeof AlunoAgendaRoute
+  '/aluno/progresso': typeof AlunoProgressoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
+  '/aluno': typeof AlunoRouteWithChildren
+  '/alunos': typeof AlunosRoute
+  '/biblioteca': typeof BibliotecaRoute
+  '/aluno/agenda': typeof AlunoAgendaRoute
+  '/aluno/progresso': typeof AlunoProgressoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/agenda'
+    | '/aluno'
+    | '/alunos'
+    | '/biblioteca'
+    | '/aluno/agenda'
+    | '/aluno/progresso'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/agenda'
+    | '/aluno'
+    | '/alunos'
+    | '/biblioteca'
+    | '/aluno/agenda'
+    | '/aluno/progresso'
+  id:
+    | '__root__'
+    | '/'
+    | '/agenda'
+    | '/aluno'
+    | '/alunos'
+    | '/biblioteca'
+    | '/aluno/agenda'
+    | '/aluno/progresso'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgendaRoute: typeof AgendaRoute
+  AlunoRoute: typeof AlunoRouteWithChildren
+  AlunosRoute: typeof AlunosRoute
+  BibliotecaRoute: typeof BibliotecaRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/biblioteca': {
+      id: '/biblioteca'
+      path: '/biblioteca'
+      fullPath: '/biblioteca'
+      preLoaderRoute: typeof BibliotecaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alunos': {
+      id: '/alunos'
+      path: '/alunos'
+      fullPath: '/alunos'
+      preLoaderRoute: typeof AlunosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aluno': {
+      id: '/aluno'
+      path: '/aluno'
+      fullPath: '/aluno'
+      preLoaderRoute: typeof AlunoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agenda': {
+      id: '/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AgendaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +156,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/aluno/progresso': {
+      id: '/aluno/progresso'
+      path: '/progresso'
+      fullPath: '/aluno/progresso'
+      preLoaderRoute: typeof AlunoProgressoRouteImport
+      parentRoute: typeof AlunoRoute
+    }
+    '/aluno/agenda': {
+      id: '/aluno/agenda'
+      path: '/agenda'
+      fullPath: '/aluno/agenda'
+      preLoaderRoute: typeof AlunoAgendaRouteImport
+      parentRoute: typeof AlunoRoute
+    }
   }
 }
 
+interface AlunoRouteChildren {
+  AlunoAgendaRoute: typeof AlunoAgendaRoute
+  AlunoProgressoRoute: typeof AlunoProgressoRoute
+}
+
+const AlunoRouteChildren: AlunoRouteChildren = {
+  AlunoAgendaRoute: AlunoAgendaRoute,
+  AlunoProgressoRoute: AlunoProgressoRoute,
+}
+
+const AlunoRouteWithChildren = AlunoRoute._addFileChildren(AlunoRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgendaRoute: AgendaRoute,
+  AlunoRoute: AlunoRouteWithChildren,
+  AlunosRoute: AlunosRoute,
+  BibliotecaRoute: BibliotecaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

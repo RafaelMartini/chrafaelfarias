@@ -1,0 +1,83 @@
+import { Link, useRouterState } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+
+const adminNav = [
+  { label: "Dashboard", to: "/" },
+  { label: "Alunos", to: "/alunos" },
+  { label: "Biblioteca", to: "/biblioteca" },
+  { label: "Agenda", to: "/agenda" },
+];
+
+const studentNav = [
+  { label: "Meu Treino", to: "/aluno" },
+  { label: "Agenda", to: "/aluno/agenda" },
+  { label: "Progresso", to: "/aluno/progresso" },
+];
+
+export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?: "admin" | "student" }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const nav = mode === "admin" ? adminNav : studentNav;
+
+  return (
+    <div className="min-h-screen">
+      <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-background/80 backdrop-blur-md border-b border-border">
+        <div className="flex items-center gap-8">
+          <Link to="/" className="text-xl font-extrabold tracking-tighter uppercase italic">
+            KINETIC<span className="text-accent">+</span>
+          </Link>
+          <div className="hidden md:flex gap-6 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            {nav.map((item) => {
+              const active = pathname === item.to;
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={active ? "text-foreground" : "hover:text-foreground transition-colors"}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            to={mode === "admin" ? "/aluno" : "/"}
+            className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-accent hover:text-accent transition-colors"
+          >
+            {mode === "admin" ? "Ver portal aluno" : "Painel admin"}
+          </Link>
+          <div className="size-8 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-[10px] font-mono text-accent">
+            {mode === "admin" ? "PH" : "MS"}
+          </div>
+        </div>
+      </nav>
+
+      <main className="max-w-7xl mx-auto px-6 py-10">{children}</main>
+
+      <footer className="border-t border-border mt-20 py-12 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="text-xs font-mono text-muted-foreground uppercase">© 2026 KINETIC+ PERFORMANCE SYSTEMS</div>
+          <div className="flex gap-8">
+            <a href="#" className="text-xs font-extrabold uppercase tracking-widest hover:text-accent">Privacidade</a>
+            <a href="#" className="text-xs font-extrabold uppercase tracking-widest hover:text-accent">Termos</a>
+            <a href="#" className="text-xs font-extrabold uppercase tracking-widest hover:text-accent">Suporte</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+export function MetricCard({ label, value, suffix, hint, highlight }: { label: string; value: string | number; suffix?: string; hint?: string; highlight?: boolean }) {
+  return (
+    <div className={`bg-surface p-6 border border-border ${highlight ? "bg-accent/5 border-accent/30" : "hover:border-accent/40"} transition-colors`}>
+      <p className={`text-xs font-mono uppercase mb-4 ${highlight ? "text-accent" : "text-muted-foreground"}`}>{label}</p>
+      <div className="flex items-baseline gap-2">
+        <span className="text-5xl font-extrabold tabular-nums">{value}</span>
+        {suffix && <span className="text-2xl font-extrabold">{suffix}</span>}
+      </div>
+      {hint && <p className="text-[10px] mt-4 uppercase text-muted-foreground tracking-tight">{hint}</p>}
+    </div>
+  );
+}
