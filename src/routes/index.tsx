@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Dumbbell, PlayCircle, CalendarDays, LineChart, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import logo from "@/assets/logo-rafael-faria.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -36,8 +37,8 @@ function Landing() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--accent)_0%,_transparent_50%)] opacity-[0.08]" />
 
       <header className="relative z-10 flex items-center justify-between px-6 md:px-12 py-6">
-        <Link to="/" className="text-xl font-extrabold tracking-tighter uppercase italic">
-          KINETIC<span className="text-accent">+</span>
+        <Link to="/" className="flex items-center">
+          <img src={logo} alt="Coach Rafael Faria" className="h-12 md:h-14 w-auto" />
         </Link>
         <div className="flex items-center gap-3">
           <Link

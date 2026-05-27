@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import logo from "@/assets/logo-rafael-faria.png";
 
 const adminNav = [
   { label: "Dashboard", to: "/dashboard" },
@@ -37,8 +38,8 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
     <div className="min-h-screen">
       <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="flex items-center gap-8">
-          <Link to={mode === "admin" ? "/dashboard" : "/aluno"} className="text-xl font-extrabold tracking-tighter uppercase italic">
-            KINETIC<span className="text-accent">+</span>
+          <Link to={mode === "admin" ? "/dashboard" : "/aluno"} className="flex items-center">
+            <img src={logo} alt="Coach Rafael Faria" className="h-10 w-auto" />
           </Link>
           <div className="hidden md:flex gap-6 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             {nav.map((item) => {
