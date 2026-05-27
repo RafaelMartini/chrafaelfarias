@@ -45,8 +45,8 @@ function AlunoPage() {
             {today.exercises.map((we, idx) => {
               const ex = exMap[we.exerciseId];
               return (
-                <div key={idx} className="group bg-surface border border-border p-4 grid md:grid-cols-[1fr_2fr] gap-6 hover:border-accent transition-all">
-                  <div className="aspect-video md:aspect-square bg-background border border-border/50 grid place-items-center group-hover:border-accent/30 transition-colors relative">
+                <div key={idx} className="group bg-surface border border-border p-4 grid md:grid-cols-[1fr_2fr] gap-6 hover:border-accent transition-all rounded-2xl">
+                  <div className="aspect-video md:aspect-square bg-background border border-border/50 grid place-items-center group-hover:border-accent/30 transition-colors relative rounded-2xl">
                     <span className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest">▶ {ex.videoPrompt}</span>
                   </div>
                   <div className="flex flex-col justify-between py-2">
@@ -76,12 +76,12 @@ function AlunoPage() {
         </div>
 
         <aside className="lg:col-span-4 space-y-6">
-          <div className="bg-surface border border-border p-6">
+          <div className="bg-surface border border-border p-6 rounded-2xl">
             <h3 className="text-lg font-extrabold uppercase mb-6">Próximos Agendamentos</h3>
             <div className="space-y-4">
               {appointments.slice(0, 2).map((a) => (
                 <div key={a.id} className="flex gap-4">
-                  <div className="flex flex-col items-center bg-background border border-border w-12 py-2 shrink-0">
+                  <div className="flex flex-col items-center bg-background border border-border w-12 py-2 shrink-0 rounded-2xl">
                     <span className="text-[10px] font-mono text-muted-foreground uppercase">{a.date.split(" ")[0]}</span>
                     <span className="text-lg font-extrabold">{a.date.split(" ")[1]}</span>
                   </div>
@@ -98,7 +98,7 @@ function AlunoPage() {
             </Link>
           </div>
 
-          <div className="bg-surface border border-border p-6">
+          <div className="bg-surface border border-border p-6 rounded-2xl">
             <h3 className="text-lg font-extrabold uppercase mb-6">Evolução</h3>
             <div className="space-y-6">
               <div className="flex justify-between items-end">
@@ -114,11 +114,11 @@ function AlunoPage() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div className="bg-background/50 border border-border/30 p-3">
+                <div className="bg-background/50 border border-border/30 p-3 rounded-2xl">
                   <p className="text-[9px] font-mono text-muted-foreground uppercase">Treinos / semana</p>
                   <p className="text-xl font-extrabold">4.2</p>
                 </div>
-                <div className="bg-background/50 border border-border/30 p-3">
+                <div className="bg-background/50 border border-border/30 p-3 rounded-2xl">
                   <p className="text-[9px] font-mono text-muted-foreground uppercase">Streak</p>
                   <p className="text-xl font-extrabold text-accent">12d</p>
                 </div>
@@ -133,7 +133,7 @@ function AlunoPage() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-background/50 border border-border/30 p-2">
+    <div className="bg-background/50 border border-border/30 p-2 rounded-2xl">
       <p className="text-[9px] font-mono text-muted-foreground uppercase">{label}</p>
       <p className="text-lg font-extrabold">{value}</p>
     </div>

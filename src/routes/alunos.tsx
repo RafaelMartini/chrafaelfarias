@@ -20,7 +20,7 @@ function AlunosPage() {
         </button>
       </div>
 
-      <div className="bg-surface border border-border overflow-hidden animate-reveal [animation-delay:100ms]">
+      <div className="bg-surface border border-border overflow-hidden animate-reveal [animation-delay:100ms] rounded-2xl">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-border text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
@@ -37,7 +37,7 @@ function AlunosPage() {
               <tr key={s.id} className="hover:bg-background/40 transition-colors">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="size-9 bg-background border border-border flex items-center justify-center font-mono text-[10px] text-accent">{s.initials}</div>
+                    <div className="size-9 bg-background border border-border flex items-center justify-center font-mono text-[10px] text-accent rounded-2xl">{s.initials}</div>
                     <span className="font-bold uppercase tracking-tight">{s.name}</span>
                   </div>
                 </td>

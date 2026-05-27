@@ -58,13 +58,13 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
         <div className="flex items-center gap-3">
           <Link
             to={mode === "admin" ? "/aluno" : "/dashboard"}
-            className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-accent hover:text-accent transition-colors"
+            className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-accent hover:text-accent transition-colors rounded-full"
           >
             {mode === "admin" ? "Ver portal aluno" : "Painel admin"}
           </Link>
           <button
             onClick={() => signOut()}
-            className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-destructive hover:text-destructive transition-colors"
+            className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-destructive hover:text-destructive transition-colors rounded-full"
           >
             Sair
           </button>
