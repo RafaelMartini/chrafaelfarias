@@ -19,12 +19,7 @@ const studentNav = [
 export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?: "admin" | "student" }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const nav = mode === "admin" ? adminNav : studentNav;
-  const { user, loading, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login", replace: true });
-  }, [loading, user, navigate]);
+  const { user, signOut } = useAuth();
 
   const initials = (user?.user_metadata?.display_name || user?.email || "")
     .toString()
@@ -33,6 +28,8 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
     .join("")
     .slice(0, 2)
     .toUpperCase() || (mode === "admin" ? "PH" : "MS");
+
+  const isAuthenticated = !!user;
 
   return (
     <div className="min-h-screen">
@@ -57,21 +54,40 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            to={mode === "admin" ? "/aluno" : "/dashboard"}
-            className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-accent hover:text-accent transition-colors rounded-full"
-          >
-            {mode === "admin" ? "Ver portal aluno" : "Painel admin"}
-          </Link>
-          <button
-            onClick={() => signOut()}
-            className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-destructive hover:text-destructive transition-colors rounded-full"
-          >
-            Sair
-          </button>
-          <div className="size-8 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-[10px] font-mono text-accent">
-            {initials}
-          </div>
+          {isAuthenticated ? (
+            <>
+              <Link
+                to={mode === "admin" ? "/aluno" : "/dashboard"}
+                className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-accent hover:text-accent transition-colors rounded-full"
+              >
+                {mode === "admin" ? "Ver portal aluno" : "Painel admin"}
+              </Link>
+              <button
+                onClick={() => signOut()}
+                className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-destructive hover:text-destructive transition-colors rounded-full"
+              >
+                Sair
+              </button>
+              <div className="size-8 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-[10px] font-mono text-accent">
+                {initials}
+              </div>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-accent hover:text-accent transition-colors rounded-full"
+              >
+                Entrar
+              </Link>
+              <Link
+                to="/signup"
+                className="text-[10px] font-mono uppercase tracking-widest bg-accent text-background px-3 py-1.5 hover:bg-accent/90 transition-colors rounded-full"
+              >
+                Criar conta
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 
