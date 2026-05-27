@@ -1,99 +1,129 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Shell, MetricCard } from "@/components/Shell";
-import { students, appointments } from "@/lib/mock-data";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { Dumbbell, PlayCircle, CalendarDays, LineChart, ArrowRight } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "KINETIC+ — Painel do Personal" },
-      { name: "description", content: "Plataforma de gestão de alta performance para personal trainers." },
+      { title: "KINETIC+ — Treinos personalizados com seu personal" },
+      { name: "description", content: "Plataforma exclusiva com treinos montados manualmente, vídeos demonstrativos e acompanhamento real da sua performance." },
     ],
   }),
-  component: AdminDashboard,
+  component: Landing,
 });
 
-function AdminDashboard() {
-  const nextAppt = appointments[0];
+const features = [
+  { icon: Dumbbell, title: "Treinos personalizados", text: "Montados manualmente para o seu objetivo, semana a semana." },
+  { icon: PlayCircle, title: "Vídeos demonstrativos", text: "Execução correta direto do seu personal, em cada exercício." },
+  { icon: CalendarDays, title: "Treinos por dia", text: "Saiba exatamente o que fazer em cada dia da sua semana." },
+  { icon: LineChart, title: "Evolução real", text: "Acompanhe sua frequência e cargas com métricas claras." },
+];
+
+function Landing() {
+  const { user, role, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate({ to: role === "trainer" ? "/dashboard" : "/aluno", replace: true });
+    }
+  }, [user, role, loading, navigate]);
+
   return (
-    <Shell mode="admin">
-      <section className="space-y-8 animate-reveal">
-        <div className="flex items-end justify-between flex-wrap gap-4">
-          <div>
-            <p className="text-xs font-mono uppercase tracking-[0.2em] text-accent mb-2">Admin Performance</p>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight uppercase">Visão Geral do Ecossistema</h1>
-          </div>
-          <div className="text-right hidden sm:block">
-            <p className="text-xs font-mono text-muted-foreground">SEG, 27 MAIO 2026</p>
-            <p className="text-xl font-extrabold">14:32</p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
+      {/* radial glow */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--accent)_0%,_transparent_50%)] opacity-[0.08]" />
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <MetricCard label="Alunos Ativos" value="42" hint="+12% este mês" />
-          <MetricCard label="Frequência Semanal" value="88" suffix="%" hint="156 check-ins registrados" />
-          <MetricCard label="Taxa de Conclusão" value="94" suffix="%" hint="Retenção acima da média" />
-          <div className="bg-surface p-6 border border-accent/30 bg-accent/5">
-            <p className="text-xs font-mono uppercase text-accent mb-4">Próxima Sessão</p>
-            <div className="text-xl font-extrabold uppercase leading-none">{nextAppt.time} — {nextAppt.student.split(" ")[0]}</div>
-            <p className="text-sm mt-2 text-foreground/80">{nextAppt.location}</p>
-            <Link to="/agenda" className="inline-block mt-4 text-[10px] font-mono uppercase bg-accent text-background px-3 py-1 font-bold">Ver Agenda</Link>
-          </div>
+      <header className="relative z-10 flex items-center justify-between px-6 md:px-12 py-6">
+        <Link to="/" className="text-xl font-extrabold tracking-tighter uppercase italic">
+          KINETIC<span className="text-accent">+</span>
+        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/login"
+            className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors px-3 py-2"
+          >
+            Entrar
+          </Link>
+          <Link
+            to="/signup"
+            className="text-xs font-extrabold uppercase tracking-widest bg-accent text-background px-4 py-2 hover:bg-accent/90 transition-colors"
+          >
+            Criar conta
+          </Link>
         </div>
-      </section>
+      </header>
 
-      <section className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8 animate-reveal [animation-delay:150ms]">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-extrabold uppercase tracking-tighter">Roster de Alunos</h2>
-            <Link to="/alunos" className="text-[10px] font-mono uppercase tracking-widest border border-border px-3 py-1.5 hover:border-accent hover:text-accent transition-colors">
-              Ver todos →
+      <main className="relative z-10">
+        {/* HERO */}
+        <section className="px-6 pt-20 pb-24 md:pt-32 md:pb-32 text-center max-w-5xl mx-auto animate-reveal">
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[1.02]">
+            Seu treino,<br />
+            sua evolução,<br />
+            <span className="text-accent">minha entrega.</span>
+          </h1>
+          <p className="mt-8 max-w-2xl mx-auto text-base md:text-lg text-muted-foreground leading-relaxed">
+            Plataforma exclusiva com treinos montados manualmente, vídeos demonstrativos
+            e acompanhamento real da sua performance.
+          </p>
+          <div className="mt-10 flex justify-center">
+            <Link
+              to="/login"
+              className="group relative inline-flex items-center gap-3 bg-accent text-background font-extrabold uppercase tracking-wide px-8 py-4 text-sm md:text-base rounded-full hover:scale-[1.02] transition-transform shadow-[0_0_60px_-10px_var(--accent)]"
+            >
+              Acessar minha conta
+              <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
-          <div className="space-y-2">
-            {students.slice(0, 5).map((s) => (
-              <div key={s.id} className="bg-surface p-4 border border-border flex items-center justify-between group hover:border-accent/40 transition-all">
-                <div className="flex items-center gap-4">
-                  <div className="size-12 bg-background border border-border flex items-center justify-center font-mono text-xs text-accent">{s.initials}</div>
-                  <div>
-                    <p className="font-bold uppercase tracking-tight">{s.name}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{s.plan} • {s.week}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-6">
-                  <div className="text-right">
-                    <p className="text-[9px] font-mono text-muted-foreground uppercase">Adesão</p>
-                    <p className={`text-sm font-extrabold ${s.compliance > 85 ? "text-accent" : s.compliance > 70 ? "text-foreground" : "text-destructive"}`}>{s.compliance}%</p>
-                  </div>
-                  <span className={`text-[10px] font-mono uppercase px-2 py-1 ${s.status === "active" ? "text-accent bg-accent/10" : s.status === "missed" ? "text-destructive bg-destructive/10" : "text-foreground bg-secondary"}`}>
-                    {s.status === "active" ? "ativo" : s.status === "missed" ? "faltou" : "novo"}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        </section>
 
-        <div className="space-y-6">
-          <h2 className="text-2xl font-extrabold uppercase tracking-tighter">Agenda Hoje</h2>
-          <div className="bg-surface border border-border p-6 space-y-5">
-            {appointments.slice(0, 3).map((a) => (
-              <div key={a.id} className="flex gap-4">
-                <div className="flex flex-col items-center bg-background border border-border w-14 py-2 shrink-0">
-                  <span className="text-[10px] font-mono text-muted-foreground uppercase">{a.date.split(" ")[0]}</span>
-                  <span className="text-lg font-extrabold">{a.date.split(" ")[1]}</span>
-                </div>
-                <div>
-                  <p className="text-sm font-bold uppercase">{a.student}</p>
-                  <p className="text-xs text-muted-foreground font-mono">{a.location} • {a.time}</p>
-                  <span className={`inline-block mt-1 text-[9px] font-mono uppercase ${a.modality === "presencial" ? "text-accent" : "text-foreground"}`}>
-                    {a.modality}
-                  </span>
-                </div>
+        {/* FEATURES */}
+        <section className="px-6 pb-24 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {features.map(({ icon: Icon, title, text }) => (
+              <div
+                key={title}
+                className="bg-surface/60 backdrop-blur-sm border border-border p-6 rounded-lg hover:border-accent/40 transition-colors group"
+              >
+                <Icon className="size-7 text-accent mb-5 group-hover:scale-110 transition-transform" />
+                <h3 className="text-base font-extrabold tracking-tight mb-2">{title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
-    </Shell>
+        </section>
+
+        {/* SECONDARY CTA */}
+        <section className="px-6 pb-32 max-w-4xl mx-auto text-center">
+          <div className="border border-border bg-surface/40 rounded-2xl p-10 md:p-16">
+            <p className="text-xs font-mono uppercase tracking-[0.3em] text-accent mb-4">Pronto para começar?</p>
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+              Comece agora sua jornada de performance.
+            </h2>
+            <div className="mt-8 flex flex-wrap gap-3 justify-center">
+              <Link
+                to="/signup"
+                className="bg-accent text-background font-extrabold uppercase tracking-wide px-6 py-3 text-sm rounded-full hover:bg-accent/90 transition-colors"
+              >
+                Criar conta grátis
+              </Link>
+              <Link
+                to="/login"
+                className="border border-border font-bold uppercase tracking-wide px-6 py-3 text-sm rounded-full hover:border-accent hover:text-accent transition-colors"
+              >
+                Já tenho acesso
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="relative z-10 border-t border-border py-8 px-6 text-center">
+        <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
+          © 2026 KINETIC+ Performance Systems
+        </p>
+      </footer>
+    </div>
   );
 }
