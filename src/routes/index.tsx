@@ -38,7 +38,7 @@ function Landing() {
 
       <header className="relative z-10 flex items-center justify-between px-6 md:px-12 py-6">
         <Link to="/" className="flex items-center">
-          <img src={logo} alt="Coach Rafael Faria" className="h-12 md:h-14 w-auto" />
+          <img src={logo} alt="Coach Rafael Faria" className="h-16 md:h-20 w-auto" />
         </Link>
         <div className="flex items-center gap-3">
           <Link

@@ -39,7 +39,7 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
       <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="flex items-center gap-8">
           <Link to={mode === "admin" ? "/dashboard" : "/aluno"} className="flex items-center">
-            <img src={logo} alt="Coach Rafael Faria" className="h-10 w-auto" />
+            <img src={logo} alt="Coach Rafael Faria" className="h-14 w-auto" />
           </Link>
           <div className="hidden md:flex gap-6 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             {nav.map((item) => {
