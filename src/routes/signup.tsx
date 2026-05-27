@@ -50,7 +50,7 @@ function SignupPage() {
     });
     setLoading(false);
     if (err) setError(err.message);
-    else setInfo("Conta criada! Verifique seu e-mail para confirmar e fazer login.");
+    else setInfo("Conta criada! Você já pode fazer login.");
   };
 
   const onGoogle = async () => {
