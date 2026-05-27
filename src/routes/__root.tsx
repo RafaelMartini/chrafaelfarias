@@ -76,6 +76,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Rafael Faria — Plataforma de Personal Training" },
       { name: "description", content: "Ecossistema fitness completo para personal trainers e alunos." },
       { property: "og:type", content: "website" },
+      { property: "og:title", content: "Rafael Faria — Plataforma de Personal Training" },
+      { name: "twitter:title", content: "Rafael Faria — Plataforma de Personal Training" },
+      { property: "og:description", content: "Ecossistema fitness completo para personal trainers e alunos." },
+      { name: "twitter:description", content: "Ecossistema fitness completo para personal trainers e alunos." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/53ae2704-839f-483f-a69d-95a811e8242a/id-preview-8725a250--ee860be4-9b4a-4869-b374-fb32add2c738.lovable.app-1779914349320.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/53ae2704-839f-483f-a69d-95a811e8242a/id-preview-8725a250--ee860be4-9b4a-4869-b374-fb32add2c738.lovable.app-1779914349320.png" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
