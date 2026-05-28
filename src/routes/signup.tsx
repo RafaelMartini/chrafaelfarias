@@ -99,26 +99,12 @@ function SignupPage() {
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               className="mt-2 w-full border border-border bg-card/70 px-4 py-3 font-mono text-sm outline-none transition-colors focus:border-primary"
             />
-          </div>
-          <div>
-            <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Eu sou</label>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {(["aluno", "trainer"] as const).map((r) => (
-                <button
-                  type="button"
-                  key={r}
-                  onClick={() => setForm({ ...form, role: r })}
-                  className={`py-3 text-xs font-extrabold uppercase tracking-widest border transition-colors ${
-                    form.role === r
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "border-border hover:border-primary hover:bg-secondary"
-                  }`}
-                >
-                  {r === "trainer" ? "Personal" : "Aluno"}
-                </button>
-              ))}
-            </div>
-          </div>
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+            Esta conta é exclusiva para alunos.{" "}
+            <Link to="/signup/personal" className="text-primary hover:underline">Sou personal trainer</Link>
+          </p>
+
+
 
           {error && <p className="text-xs font-mono text-destructive uppercase">{error}</p>}
           {info && <p className="text-xs font-mono text-primary uppercase">{info}</p>}
