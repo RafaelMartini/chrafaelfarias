@@ -118,12 +118,12 @@ function Progresso() {
                 key={m.label}
                 className={`p-5 border rounded-2xl flex items-start gap-4 transition-all ${
                   m.earned
-                    ? "bg-accent/5 border-accent/30"
-                    : "bg-surface border-border opacity-50"
+                    ? "bg-primary/10 border-primary/30 shadow-xl backdrop-blur-xl"
+                    : "bg-card/75 border-border opacity-50 shadow-xl backdrop-blur-xl"
                 }`}
               >
-                <div className={`shrink-0 size-10 rounded-full flex items-center justify-center ${m.earned ? "bg-accent/20" : "bg-muted/20"}`}>
-                  <Icon className={`size-5 ${m.earned ? "text-accent" : "text-muted-foreground"}`} />
+                <div className={`shrink-0 size-10 rounded-full flex items-center justify-center ${m.earned ? "bg-primary/20" : "bg-muted/20"}`}>
+                  <Icon className={`size-5 ${m.earned ? "text-primary" : "text-muted-foreground"}`} />
                 </div>
                 <div>
                   <p className={`text-sm font-bold ${m.earned ? "text-foreground" : "text-muted-foreground"}`}>{m.label}</p>
@@ -137,14 +137,14 @@ function Progresso() {
 
       {/* Resumo do mês */}
       <section className="mt-8 animate-reveal [animation-delay:400ms]">
-        <div className="bg-surface border border-border p-6 sm:p-8 rounded-2xl">
+        <div className="rounded-3xl border border-border bg-card/75 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <h2 className="text-lg font-extrabold uppercase">Resumo do Mês</h2>
               <p className="text-sm text-muted-foreground mt-1">Maio de 2026</p>
             </div>
             <div className="flex items-center gap-2">
-              <CalendarCheck className="size-4 text-accent" />
+              <CalendarCheck className="size-4 text-primary" />
               <span className="text-sm font-bold">18 de 20 treinos realizados</span>
             </div>
           </div>
@@ -158,7 +158,7 @@ function Progresso() {
               <div key={stat.label} className="bg-background/50 border border-border/30 p-4 rounded-2xl text-center">
                 <p className="text-[10px] font-mono uppercase text-muted-foreground mb-1">{stat.label}</p>
                 <p className="text-2xl font-extrabold">{stat.value}</p>
-                <p className="text-[10px] font-mono text-accent mt-1">{stat.change}</p>
+                <p className="mt-1 text-[10px] font-mono text-primary">{stat.change}</p>
               </div>
             ))}
           </div>
