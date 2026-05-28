@@ -1,131 +1,215 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Shell } from "@/components/Shell";
-import { weekWorkouts, exercises, appointments } from "@/lib/mock-data";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/aluno")({
   head: () => ({ meta: [{ title: "Meu Treino — Rafael Faria" }] }),
   component: AlunoPage,
 });
 
+const DAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
+type WorkoutItem = {
+  id: string;
+  workout_id: string;
+  sets: number;
+  reps: string;
+  load_kg: number | null;
+  rest_seconds: number | null;
+  order_index: number;
+  exercise: { id: string; name: string; description: string | null; video_url: string | null; muscle_group: string | null } | null;
+};
+
+type Workout = {
+  id: string;
+  name: string;
+  notes: string | null;
+  day_of_week: number | null;
+};
+
+function embedUrl(url: string | null): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtube.com")) {
+      const id = u.searchParams.get("v");
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
+    if (u.hostname === "youtu.be") return `https://www.youtube.com/embed/${u.pathname.slice(1)}`;
+    if (u.hostname.includes("vimeo.com")) {
+      const id = u.pathname.split("/").filter(Boolean)[0];
+      if (id) return `https://player.vimeo.com/video/${id}`;
+    }
+    return url;
+  } catch {
+    return null;
+  }
+}
+
 function AlunoPage() {
-  const today = weekWorkouts[0]; // Segunda
-  const exMap = Object.fromEntries(exercises.map((e) => [e.id, e]));
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
+
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: "/login", replace: true });
+  }, [loading, user, navigate]);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["my-workouts", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data: workouts, error } = await supabase
+        .from("workouts")
+        .select("id, name, notes, day_of_week")
+        .eq("student_id", user!.id)
+        .order("day_of_week", { ascending: true });
+      if (error) throw error;
+      const ids = (workouts ?? []).map((w) => w.id);
+      let items: WorkoutItem[] = [];
+      if (ids.length > 0) {
+        const { data: rows, error: e2 } = await supabase
+          .from("workout_exercises")
+          .select("id, workout_id, sets, reps, load_kg, rest_seconds, order_index, exercise:exercises(id, name, description, video_url, muscle_group)")
+          .in("workout_id", ids)
+          .order("order_index", { ascending: true });
+        if (e2) throw e2;
+        items = (rows ?? []) as unknown as WorkoutItem[];
+      }
+      return { workouts: (workouts ?? []) as Workout[], items };
+    },
+  });
+
+  const workouts = data?.workouts ?? [];
+  const items = data?.items ?? [];
+
+  const todayWorkouts = useMemo(
+    () => workouts.filter((w) => w.day_of_week === selectedDay),
+    [workouts, selectedDay],
+  );
+
+  const availableDays = useMemo(() => {
+    const s = new Set(workouts.map((w) => w.day_of_week).filter((d): d is number => d !== null));
+    return s;
+  }, [workouts]);
 
   return (
     <Shell mode="student">
       <section className="space-y-8 animate-reveal">
         <div className="flex items-end justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Olá, Mariana</p>
+            <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Olá</p>
             <h1 className="text-4xl md:text-5xl font-extrabold uppercase tracking-tight">Treino do Dia</h1>
           </div>
           <div className="flex gap-2 flex-wrap">
-            {weekWorkouts.map((w, i) => (
-              <button
-                key={w.day}
-                className={`rounded-full border px-3 py-2 text-[10px] font-mono uppercase tracking-widest ${i === 0 ? "border-primary bg-primary text-primary-foreground font-bold" : "border-border text-muted-foreground hover:border-primary hover:bg-secondary hover:text-foreground"} transition-colors`}
-              >
-                {w.day.slice(0, 3)}
-              </button>
-            ))}
+            {DAYS.map((d, i) => {
+              const has = availableDays.has(i);
+              const active = i === selectedDay;
+              return (
+                <button
+                  key={d}
+                  onClick={() => setSelectedDay(i)}
+                  className={`relative rounded-full border px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors ${active ? "border-primary bg-primary text-primary-foreground font-bold" : "border-border text-muted-foreground hover:border-primary hover:bg-secondary hover:text-foreground"}`}
+                >
+                  {d.slice(0, 3)}
+                  {has && !active && <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary" />}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      <section className="mt-12 grid grid-cols-1 lg:grid-cols-12 gap-10 animate-reveal [animation-delay:100ms]">
-        <div className="lg:col-span-8 space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-extrabold uppercase tracking-tighter">
-              <span className="text-muted-foreground">{today.day}: </span>{today.name}
-            </h2>
-            <span className="text-xs font-mono border border-border px-3 py-1 rounded-full">{today.exercises.length} EXERCÍCIOS</span>
-          </div>
+      <section className="mt-12 space-y-10 animate-reveal [animation-delay:100ms]">
+        {isLoading && <p className="text-xs font-mono text-muted-foreground">Carregando treinos…</p>}
 
-          <div className="space-y-3">
-            {today.exercises.map((we, idx) => {
-              const ex = exMap[we.exerciseId];
-              return (
-                <div key={idx} className="group grid rounded-3xl border border-border bg-card/75 p-4 shadow-2xl backdrop-blur-xl transition-all hover:-translate-y-1 hover:border-primary/40 md:grid-cols-[1fr_2fr] gap-6">
-                  <div className="relative grid aspect-video place-items-center rounded-3xl border border-border/50 bg-background/50 transition-colors group-hover:border-primary/30 md:aspect-square">
-                    <span className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest">▶ {ex.videoPrompt}</span>
-                  </div>
-                  <div className="flex flex-col justify-between py-2">
-                    <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-xl font-extrabold uppercase tracking-tight">
-                          {String(idx + 1).padStart(2, "0")}. {ex.name}
-                        </h3>
-                        <span className="text-xs font-mono text-primary">{we.sets} SÉRIES</span>
+        {!isLoading && todayWorkouts.length === 0 && (
+          <div className="rounded-3xl border border-dashed border-border p-10 text-center">
+            <p className="text-sm font-mono uppercase text-muted-foreground">Nenhum treino programado para {DAYS[selectedDay]}.</p>
+            <p className="mt-2 text-xs font-mono text-muted-foreground">Fale com seu instrutor para receber o seu treino.</p>
+          </div>
+        )}
+
+        {todayWorkouts.map((w) => {
+          const workoutItems = items.filter((it) => it.workout_id === w.id);
+          return (
+            <div key={w.id} className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-extrabold uppercase tracking-tighter">
+                  <span className="text-muted-foreground">{DAYS[selectedDay]}: </span>{w.name}
+                </h2>
+                <span className="text-xs font-mono border border-border px-3 py-1 rounded-full">{workoutItems.length} EXERCÍCIOS</span>
+              </div>
+              {w.notes && <p className="text-sm text-muted-foreground italic">{w.notes}</p>}
+
+              <div className="space-y-4">
+                {workoutItems.map((we, idx) => {
+                  const ex = we.exercise;
+                  const embed = embedUrl(ex?.video_url ?? null);
+                  return (
+                    <div key={we.id} className="group grid rounded-3xl border border-border bg-card/75 p-4 shadow-2xl backdrop-blur-xl transition-all hover:-translate-y-1 hover:border-primary/40 md:grid-cols-[1.2fr_2fr] gap-6">
+                      <div className="relative aspect-video overflow-hidden rounded-2xl border border-border/50 bg-background/50">
+                        {embed ? (
+                          <iframe
+                            src={embed}
+                            title={ex?.name ?? "Vídeo do exercício"}
+                            className="h-full w-full"
+                            allow="autoplay; encrypted-media; picture-in-picture"
+                            allowFullScreen
+                          />
+                        ) : (
+                          <div className="grid h-full w-full place-items-center text-center px-4">
+                            <span className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest">
+                              ▶ Vídeo não disponível
+                            </span>
+                          </div>
+                        )}
+                        {ex?.muscle_group && (
+                          <div className="absolute right-2 top-2 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9px] font-mono uppercase text-primary">
+                            {ex.muscle_group}
+                          </div>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground">{ex.description}</p>
+                      <div className="flex flex-col justify-between py-2">
+                        <div>
+                          <div className="flex justify-between items-start mb-2 gap-3">
+                            <h3 className="text-xl font-extrabold uppercase tracking-tight">
+                              {String(idx + 1).padStart(2, "0")}. {ex?.name ?? "Exercício"}
+                            </h3>
+                            <span className="text-xs font-mono text-primary whitespace-nowrap">{we.sets} SÉRIES</span>
+                          </div>
+                          {ex?.description && (
+                            <p className="text-sm text-muted-foreground whitespace-pre-line">{ex.description}</p>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mt-4">
+                          <Stat label="Reps" value={we.reps} />
+                          <Stat label="Carga" value={we.load_kg != null ? `${we.load_kg}kg` : "—"} />
+                          <Stat label="Descanso" value={we.rest_seconds != null ? `${we.rest_seconds}s` : "—"} />
+                        </div>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 mt-4">
-                      <Stat label="Reps" value={we.reps} />
-                      <Stat label="Carga" value={we.load} />
-                      <Stat label="Descanso" value={we.rest} />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
 
-          <button className="w-full rounded-full bg-primary py-4 text-xs font-extrabold uppercase tracking-widest text-primary-foreground transition-transform hover:scale-[1.01]">
-            Marcar Treino como Concluído
-          </button>
+                {workoutItems.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-border p-6 text-center">
+                    <p className="text-xs font-mono uppercase text-muted-foreground">Este treino ainda não possui exercícios.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        <div className="pt-4">
+          <Link to="/aluno/agenda" className="block w-full rounded-full bg-primary py-3 text-center text-xs font-extrabold uppercase tracking-widest text-primary-foreground transition-transform hover:scale-[1.01]">
+            Ver Agenda
+          </Link>
         </div>
-
-        <aside className="lg:col-span-4 space-y-6">
-          <div className="rounded-3xl border border-border bg-card/75 p-6 shadow-2xl backdrop-blur-xl">
-            <h3 className="text-lg font-extrabold uppercase mb-6">Próximos Agendamentos</h3>
-            <div className="space-y-4">
-              {appointments.slice(0, 2).map((a) => (
-                <div key={a.id} className="flex gap-4">
-                  <div className="flex flex-col items-center bg-background border border-border w-12 py-2 shrink-0 rounded-2xl">
-                    <span className="text-[10px] font-mono text-muted-foreground uppercase">{a.date.split(" ")[0]}</span>
-                    <span className="text-lg font-extrabold">{a.date.split(" ")[1]}</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold uppercase">{a.modality === "presencial" ? "Treino presencial" : "Consultoria online"}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{a.location} • {a.time}</p>
-                    <button className="mt-1 text-[9px] font-mono uppercase text-primary hover:underline">Confirmar Presença</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Link to="/aluno/agenda" className="mt-6 block w-full rounded-full bg-primary py-3 text-center text-xs font-extrabold uppercase tracking-widest text-primary-foreground transition-transform hover:scale-[1.02]">
-              Agendar Nova Aula
-            </Link>
-          </div>
-
-          <div className="rounded-3xl border border-border bg-card/75 p-6 shadow-2xl backdrop-blur-xl">
-            <h3 className="text-lg font-extrabold uppercase mb-6">Evolução</h3>
-            <div className="space-y-6">
-              <div className="flex justify-between items-end">
-                <div>
-                  <p className="text-[10px] font-mono text-muted-foreground uppercase">Peso Atual</p>
-                  <p className="text-3xl font-extrabold">84.2<small className="text-sm font-normal ml-1">KG</small></p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-tighter">META: 80KG</p>
-                  <div className="w-24 h-1 bg-border mt-1">
-                    <div className="h-full bg-primary w-1/3" />
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-background/50 border border-border/30 p-3 rounded-2xl">
-                  <p className="text-[9px] font-mono text-muted-foreground uppercase">Treinos / semana</p>
-                  <p className="text-xl font-extrabold">4.2</p>
-                </div>
-                <div className="bg-background/50 border border-border/30 p-3 rounded-2xl">
-                  <p className="text-[9px] font-mono text-muted-foreground uppercase">Streak</p>
-                  <p className="text-xl font-extrabold text-primary">12d</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
       </section>
     </Shell>
   );
