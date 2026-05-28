@@ -98,7 +98,9 @@ function SignupPage() {
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               className="mt-2 w-full border border-border bg-card/70 px-4 py-3 font-mono text-sm outline-none transition-colors focus:border-primary"
+            />
           </div>
+
           <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
             Esta conta é exclusiva para alunos.{" "}
             <Link to="/signup/personal" className="text-primary hover:underline">Sou personal trainer</Link>
