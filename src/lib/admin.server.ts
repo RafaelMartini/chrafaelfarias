@@ -31,6 +31,13 @@ export type AddExerciseToWorkoutInput = {
   rest_seconds: number | null;
 };
 
+export type CreateAppointmentInput = {
+  studentId: string;
+  scheduled_at: string;
+  duration_minutes: number;
+  notes?: string;
+};
+
 type StudentProfile = {
   id: string;
   user_id: string;
