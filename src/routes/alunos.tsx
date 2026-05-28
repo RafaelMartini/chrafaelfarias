@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Shell } from "@/components/Shell";
@@ -17,9 +17,11 @@ function AlunosPage() {
   const list = useServerFn(listMyStudents);
   const [open, setOpen] = useState(false);
 
-  if (!loading && (!user || role !== "trainer")) {
-    navigate({ to: "/login", replace: true });
-  }
+  useEffect(() => {
+    if (!loading && (!user || role !== "trainer")) {
+      navigate({ to: "/login", replace: true });
+    }
+  }, [loading, user, role, navigate]);
 
   const { data: students = [], isLoading } = useQuery({
     queryKey: ["my-students"],

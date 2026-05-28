@@ -16,6 +16,15 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+async function fetchRole(userId: string): Promise<Role> {
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return (data?.role as Role) ?? "aluno";
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<Role>(null);
@@ -24,39 +33,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
 
   useEffect(() => {
+    let active = true;
+
     const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
+      if (!active) return;
       setSession(s);
       if (s?.user) {
+        setLoading(true);
         // defer to avoid deadlock
         setTimeout(() => {
-          supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", s.user.id)
-            .maybeSingle()
-            .then(({ data }) => setRole((data?.role as Role) ?? "aluno"));
+          fetchRole(s.user.id).then((r) => {
+            if (!active) return;
+            setRole(r);
+            setLoading(false);
+            router.invalidate();
+            qc.invalidateQueries();
+          });
         }, 0);
       } else {
         setRole(null);
+        setLoading(false);
+        router.invalidate();
+        qc.invalidateQueries();
       }
-      router.invalidate();
-      qc.invalidateQueries();
     });
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!active) return;
       setSession(data.session);
       if (data.session?.user) {
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.session.user.id)
-          .maybeSingle()
-          .then(({ data: r }) => setRole((r?.role as Role) ?? "aluno"));
+        const r = await fetchRole(data.session.user.id);
+        if (!active) return;
+        setRole(r);
       }
       setLoading(false);
     });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
   }, [router, qc]);
 
   const signOut = async () => {
