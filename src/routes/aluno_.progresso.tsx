@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TrendingUp, CalendarCheck, Dumbbell, Flame, Plus } from "lucide-react";
 
-export const Route = createFileRoute("/aluno/progresso")({
+export const Route = createFileRoute("/aluno_/progresso")({
   head: () => ({ meta: [{ title: "Meu Progresso — Rafael Faria" }] }),
   component: Progresso,
 });
