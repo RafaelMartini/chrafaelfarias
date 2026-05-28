@@ -45,7 +45,8 @@ function SignupPage() {
       password: parsed.data.password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { display_name: parsed.data.name, role: parsed.data.role },
+        data: { display_name: parsed.data.name, role: "aluno" },
+
       },
     });
     setLoading(false);
