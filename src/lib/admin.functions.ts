@@ -3,16 +3,20 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   addExerciseToWorkoutForAdmin,
+  createAppointmentForAdmin,
   createExerciseForAdmin,
   createStudentForAdmin,
   createWorkoutForAdmin,
+  deleteAppointmentForAdmin,
   deleteExerciseForAdmin,
   deleteWorkoutForAdmin,
   getAdminOverviewForAdmin,
   getStudentWorkoutsForAdmin,
+  listAppointmentsForAdmin,
   listExercisesForAdmin,
   listStudentsForAdmin,
   removeExerciseFromWorkoutForAdmin,
+  updateAppointmentStatusForAdmin,
 } from "./admin.server";
 
 const studentSchema = z.object({
@@ -97,3 +101,29 @@ export const removeExerciseFromWorkout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => removeExerciseFromWorkoutForAdmin(context.userId, data.id));
+
+const appointmentSchema = z.object({
+  studentId: z.string().uuid(),
+  scheduled_at: z.string().min(1),
+  duration_minutes: z.number().int().min(15).max(480),
+  notes: z.string().trim().max(500).optional().or(z.literal("")),
+});
+
+export const listAppointments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => listAppointmentsForAdmin(context.userId));
+
+export const createAppointment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => appointmentSchema.parse(input))
+  .handler(async ({ data, context }) => createAppointmentForAdmin(context.userId, data));
+
+export const updateAppointmentStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid(), status: z.enum(["scheduled", "confirmed", "completed", "cancelled"]) }).parse(input))
+  .handler(async ({ data, context }) => updateAppointmentStatusForAdmin(context.userId, data.id, data.status));
+
+export const deleteAppointment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => deleteAppointmentForAdmin(context.userId, data.id));

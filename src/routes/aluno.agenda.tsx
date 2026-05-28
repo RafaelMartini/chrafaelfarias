@@ -1,172 +1,178 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Shell } from "@/components/Shell";
-import { CalendarDays, MapPin, Video, CheckCircle2, Clock, Filter } from "lucide-react";
-import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { CalendarDays, CheckCircle2, X, Plus, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/aluno/agenda")({
   head: () => ({ meta: [{ title: "Minha Agenda — Rafael Faria" }] }),
   component: StudentAgenda,
 });
 
-const slots = [
-  { date: "MAI 28", day: "Quarta", times: [
-    { time: "07:00", location: "Jardins", type: "presencial", status: "disponivel" as const },
-    { time: "09:00", location: "Jardins", type: "presencial", status: "ocupado" as const },
-    { time: "18:00", location: "Online", type: "online", status: "disponivel" as const },
-  ]},
-  { date: "MAI 29", day: "Quinta", times: [
-    { time: "08:00", location: "Pinheiros", type: "presencial", status: "disponivel" as const },
-    { time: "19:30", location: "Online", type: "online", status: "disponivel" as const },
-  ]},
-  { date: "MAI 30", day: "Sexta", times: [
-    { time: "07:00", location: "Jardins", type: "presencial", status: "disponivel" as const },
-    { time: "10:00", location: "Jardins", type: "presencial", status: "reservado" as const },
-  ]},
-  { date: "JUN 02", day: "Segunda", times: [
-    { time: "07:30", location: "Jardins", type: "presencial", status: "disponivel" as const },
-    { time: "15:00", location: "Pinheiros", type: "presencial", status: "disponivel" as const },
-    { time: "20:00", location: "Online", type: "online", status: "ocupado" as const },
-  ]},
-];
-
-const filterOptions = ["todos", "presencial", "online"] as const;
-
 function StudentAgenda() {
-  const [filter, setFilter] = useState<typeof filterOptions[number]>("todos");
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const qc = useQueryClient();
 
-  const filteredSlots = slots.map((s) => ({
-    ...s,
-    times: filter === "todos" ? s.times : s.times.filter((t) => t.type === filter),
-  })).filter((s) => s.times.length > 0);
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: "/login", replace: true });
+  }, [loading, user, navigate]);
+
+  const { data: profile } = useQuery({
+    queryKey: ["my-profile", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("trainer_id").eq("user_id", user!.id).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: appts = [], isLoading } = useQuery({
+    queryKey: ["my-appts", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("id, scheduled_at, duration_minutes, status, notes")
+        .eq("student_id", user!.id)
+        .order("scheduled_at", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ date: "", time: "", duration: 60, notes: "" });
+
+  const createMut = useMutation({
+    mutationFn: async () => {
+      if (!profile?.trainer_id) throw new Error("Você ainda não está vinculado a um personal");
+      const scheduled_at = new Date(`${form.date}T${form.time}:00`).toISOString();
+      const { error } = await supabase.from("appointments").insert({
+        student_id: user!.id,
+        trainer_id: profile.trainer_id,
+        scheduled_at,
+        duration_minutes: Number(form.duration) || 60,
+        notes: form.notes || null,
+        status: "scheduled",
+      });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Solicitação enviada");
+      qc.invalidateQueries({ queryKey: ["my-appts"] });
+      setShowForm(false);
+      setForm({ date: "", time: "", duration: 60, notes: "" });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const cancelMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("appointments").update({ status: "cancelled" }).eq("id", id).eq("student_id", user!.id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Agendamento cancelado");
+      qc.invalidateQueries({ queryKey: ["my-appts"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const upcoming = appts.filter((a) => new Date(a.scheduled_at) >= new Date() && a.status !== "cancelled");
+  const past = appts.filter((a) => new Date(a.scheduled_at) < new Date() || a.status === "cancelled");
 
   return (
     <Shell mode="student">
-      <div className="mb-10 animate-reveal">
-        <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Agendamentos</p>
-        <h1 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Horários Disponíveis</h1>
-        <p className="text-muted-foreground mt-3 max-w-xl">
-          Escolha modalidade, unidade e horário com o seu personal. Horários em verde estão livres.
-        </p>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-reveal">
+        <div>
+          <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Agendamentos</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Minha Agenda</h1>
+          <p className="text-muted-foreground mt-2 text-sm max-w-lg">Solicite horários ao seu personal e acompanhe seu calendário.</p>
+        </div>
+        <button
+          onClick={() => setShowForm((s) => !s)}
+          className="inline-flex items-center gap-2 self-start rounded-full bg-primary px-4 py-2 text-[10px] font-mono uppercase tracking-widest text-primary-foreground shadow-lg"
+        >
+          <Plus className="size-3" /> {showForm ? "Fechar" : "Solicitar Horário"}
+        </button>
       </div>
 
-      {/* Filtros */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8 animate-reveal [animation-delay:100ms]">
-        <div className="flex items-center gap-2 text-[10px] font-mono uppercase text-muted-foreground">
-          <Filter className="size-3" />
-          <span>Filtrar:</span>
-        </div>
-        <div className="flex gap-2">
-          {filterOptions.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-2 text-[10px] font-mono uppercase tracking-widest border rounded-full transition-colors ${
-                filter === f
-                  ? "bg-primary text-primary-foreground border-primary font-bold"
-                  : "border-border hover:border-primary hover:bg-secondary hover:text-primary"
-              }`}
-            >
-              {f === "todos" ? "Todos" : f === "presencial" ? "Presencial" : "Online"}
-            </button>
-          ))}
-        </div>
-      </div>
+      {showForm && (
+        <form
+          onSubmit={(e) => { e.preventDefault(); if (!form.date || !form.time) { toast.error("Preencha data e hora"); return; } createMut.mutate(); }}
+          className="mb-8 rounded-3xl border border-border bg-card/75 p-5 sm:p-6 shadow-xl backdrop-blur-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 animate-reveal"
+        >
+          <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+          <input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} className="rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+          <input type="number" min={15} max={240} value={form.duration} onChange={(e) => setForm({ ...form, duration: Number(e.target.value) })} placeholder="Duração (min)" className="rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+          <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Observação (modalidade, local...)" className="rounded-xl border border-border bg-background px-3 py-2 text-sm sm:col-span-3" />
+          <button disabled={createMut.isPending} className="rounded-xl bg-primary px-4 py-2 text-[10px] font-mono uppercase tracking-widest text-primary-foreground disabled:opacity-50">
+            {createMut.isPending ? "Enviando…" : "Solicitar"}
+          </button>
+        </form>
+      )}
 
-      {/* Próximos agendamentos confirmados */}
-      <section className="mb-8 animate-reveal [animation-delay:150ms]">
-        <h2 className="text-sm font-extrabold uppercase tracking-widest mb-4 flex items-center gap-2">
-          <CheckCircle2 className="size-4 text-primary" />
-          Confirmados
+      <section className="space-y-3 animate-reveal [animation-delay:100ms]">
+        <h2 className="text-sm font-extrabold uppercase tracking-widest mb-2 flex items-center gap-2">
+          <CalendarDays className="size-4 text-primary" /> Próximos
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {[
-            { date: "MAI 28", day: "Quarta", time: "07:00", location: "Jardins", type: "presencial" as const },
-            { date: "MAI 30", day: "Sexta", time: "10:00", location: "Jardins", type: "presencial" as const },
-          ].map((a) => (
-            <div key={`${a.date}-${a.time}`} className="flex items-center gap-4 rounded-3xl border border-primary/30 bg-primary/10 p-4 shadow-xl backdrop-blur-xl">
-              <div className="flex w-12 shrink-0 flex-col items-center rounded-2xl border border-primary/30 bg-background/50 py-2">
-                <span className="text-[9px] font-mono text-primary uppercase">{a.date.split(" ")[0]}</span>
-                <span className="text-base font-extrabold text-primary">{a.date.split(" ")[1]}</span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-bold uppercase truncate">{a.day} às {a.time}</p>
-                <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground mt-1">
-                  {a.type === "presencial" ? <MapPin className="size-3" /> : <Video className="size-3" />}
-                  <span>{a.location}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        {isLoading && <p className="text-xs font-mono uppercase text-muted-foreground">Carregando…</p>}
+        {!isLoading && upcoming.length === 0 && (
+          <div className="rounded-3xl border border-dashed border-border p-6 text-center text-xs font-mono uppercase text-muted-foreground">
+            Nenhum agendamento futuro
+          </div>
+        )}
+        {upcoming.map((a) => (
+          <ApptCard key={a.id} a={a} onCancel={() => cancelMut.mutate(a.id)} />
+        ))}
       </section>
 
-      {/* Grade de horários */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-reveal [animation-delay:200ms]">
-        {filteredSlots.map((s) => (
-          <div key={s.date} className="rounded-3xl border border-border bg-card/75 p-5 shadow-2xl backdrop-blur-xl sm:p-6">
-            <div className="flex items-center gap-4 mb-5">
-              <div className="flex flex-col items-center bg-background border border-border w-14 py-2 rounded-2xl shrink-0">
-                <span className="text-[10px] font-mono text-muted-foreground uppercase">{s.date.split(" ")[0]}</span>
-                <span className="text-lg font-extrabold">{s.date.split(" ")[1]}</span>
-              </div>
-              <div>
-                <p className="text-lg font-extrabold uppercase tracking-tight">{s.day}</p>
-                <p className="text-[10px] font-mono text-muted-foreground uppercase">
-                  {s.times.filter((t) => t.status === "disponivel").length} horários livres
-                </p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              {s.times.map((t) => {
-                const statusConfig = {
-                  disponivel: { bg: "hover:bg-primary hover:text-primary-foreground", border: "hover:border-primary", icon: <Clock className="size-3" />, label: "Disponível" },
-                  ocupado: { bg: "opacity-40 cursor-not-allowed", border: "", icon: <span className="size-3 rounded-full bg-destructive/50" />, label: "Ocupado" },
-                  reservado: { bg: "bg-primary/10", border: "border-primary/30", icon: <CheckCircle2 className="size-3 text-primary" />, label: "Confirmado" },
-                };
-                const config = statusConfig[t.status];
-                return (
-                  <button
-                    key={t.time}
-                    disabled={t.status === "ocupado"}
-                    className={`w-full flex items-center justify-between px-4 py-3 border border-border font-mono text-xs uppercase transition-colors rounded-xl ${config.bg} ${config.border}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {config.icon}
-                      <span className="font-bold">{t.time}</span>
-                      <span className="text-muted-foreground hidden sm:inline">—</span>
-                      <span className="text-muted-foreground hidden sm:inline">{t.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {t.type === "presencial" ? (
-                        <MapPin className="size-3 text-muted-foreground" />
-                      ) : (
-                        <Video className="size-3 text-muted-foreground" />
-                      )}
-                      <span className="text-[9px] uppercase hidden sm:inline">{config.label}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Legenda */}
-      <div className="mt-6 flex flex-wrap gap-4 text-[10px] font-mono uppercase text-muted-foreground animate-reveal [animation-delay:300ms]">
-        <div className="flex items-center gap-1.5">
-          <Clock className="size-3" />
-          <span>Disponível</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="size-3 text-primary" />
-          <span>Confirmado</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="size-3 rounded-full bg-destructive/50" />
-          <span>Ocupado</span>
-        </div>
-      </div>
+      {past.length > 0 && (
+        <section className="mt-10 space-y-3 animate-reveal [animation-delay:200ms]">
+          <h2 className="text-sm font-extrabold uppercase tracking-widest mb-2 flex items-center gap-2">
+            <Clock className="size-4 text-muted-foreground" /> Histórico
+          </h2>
+          {past.map((a) => (
+            <ApptCard key={a.id} a={a} muted />
+          ))}
+        </section>
+      )}
     </Shell>
+  );
+}
+
+type Appt = { id: string; scheduled_at: string; duration_minutes: number; status: string; notes: string | null };
+
+function ApptCard({ a, onCancel, muted }: { a: Appt; onCancel?: () => void; muted?: boolean }) {
+  const d = new Date(a.scheduled_at);
+  return (
+    <div className={`flex flex-col gap-3 rounded-2xl border p-4 shadow-xl backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between ${muted ? "border-border bg-card/40 opacity-70" : "border-border bg-card/75"}`}>
+      <div className="flex items-center gap-4 min-w-0">
+        <div className="flex w-14 shrink-0 flex-col items-center rounded-xl border border-border bg-background py-2">
+          <span className="text-[9px] font-mono uppercase text-muted-foreground">{d.toLocaleDateString("pt-BR", { month: "short" })}</span>
+          <span className="text-base font-extrabold">{d.toLocaleDateString("pt-BR", { day: "2-digit" })}</span>
+        </div>
+        <div className="min-w-0">
+          <p className="font-bold uppercase tracking-tight">{d.toLocaleDateString("pt-BR", { weekday: "long" })} às {d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p>
+          <p className="text-[10px] font-mono text-muted-foreground">{a.duration_minutes} min{a.notes ? ` • ${a.notes}` : ""}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className={`rounded-full px-3 py-1 text-[9px] font-mono uppercase ${a.status === "confirmed" || a.status === "completed" ? "bg-primary/10 text-primary" : a.status === "cancelled" ? "bg-destructive/10 text-destructive" : "bg-secondary text-foreground"}`}>
+          {a.status === "scheduled" ? "pendente" : a.status}
+        </span>
+        {onCancel && a.status !== "cancelled" && (
+          <button onClick={onCancel} className="rounded-full border border-border p-2 hover:border-destructive hover:text-destructive" title="Cancelar">
+            <X className="size-3" />
+          </button>
+        )}
+        {(a.status === "confirmed" || a.status === "completed") && <CheckCircle2 className="size-4 text-primary" />}
+      </div>
+    </div>
   );
 }
