@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import logo from "@/assets/logo-rafael-faria.png";
 
-export const Route = createFileRoute("/signup/admin")({
+export const Route = createFileRoute("/signup_/admin")({
   head: () => ({ meta: [{ title: "Cadastro Admin — Rafael Faria" }] }),
   component: SignupAdminPage,
 });

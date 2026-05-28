@@ -13,7 +13,7 @@ import {
   listMyExercises,
 } from "@/lib/admin.functions";
 
-export const Route = createFileRoute("/alunos/$studentId")({
+export const Route = createFileRoute("/alunos_/$studentId")({
   head: () => ({ meta: [{ title: "Treinos do Aluno — Rafael Faria" }] }),
   component: StudentDetailPage,
 });
