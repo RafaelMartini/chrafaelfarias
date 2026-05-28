@@ -369,3 +369,78 @@ export async function removeExerciseFromWorkoutForAdmin(userId: string, id: stri
   if (error) throw new Error("Não foi possível remover o exercício do treino");
   return { ok: true };
 }
+
+export async function listAppointmentsForAdmin(userId: string) {
+  await assertAdmin(userId);
+
+  const { data: appts, error } = await supabaseAdmin
+    .from("appointments")
+    .select("id, scheduled_at, duration_minutes, status, notes, student_id")
+    .eq("trainer_id", userId)
+    .order("scheduled_at", { ascending: true });
+
+  if (error) throw new Error("Não foi possível carregar a agenda");
+
+  const ids = Array.from(new Set((appts ?? []).map((a) => a.student_id)));
+  let profilesMap = new Map<string, string>();
+  if (ids.length) {
+    const { data: profs } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id, display_name")
+      .in("user_id", ids);
+    profilesMap = new Map((profs ?? []).map((p) => [p.user_id, p.display_name ?? "Aluno"]));
+  }
+
+  return (appts ?? []).map((a) => ({ ...a, student_name: profilesMap.get(a.student_id) ?? "Aluno" }));
+}
+
+export async function createAppointmentForAdmin(userId: string, data: CreateAppointmentInput) {
+  await assertAdmin(userId);
+
+  const { data: student, error: sErr } = await supabaseAdmin
+    .from("profiles")
+    .select("user_id, trainer_id")
+    .eq("user_id", data.studentId)
+    .maybeSingle();
+  if (sErr) throw new Error("Não foi possível validar o aluno");
+  if (!student) throw new Error("Aluno não encontrado");
+  if ((student as StudentProfile).trainer_id && (student as StudentProfile).trainer_id !== userId) {
+    throw new Error("Aluno vinculado a outro admin");
+  }
+  if (!(student as StudentProfile).trainer_id) {
+    await supabaseAdmin.from("profiles").update({ trainer_id: userId }).eq("user_id", data.studentId).is("trainer_id", null);
+  }
+
+  const { error } = await supabaseAdmin.from("appointments").insert({
+    trainer_id: userId,
+    student_id: data.studentId,
+    scheduled_at: data.scheduled_at,
+    duration_minutes: data.duration_minutes,
+    notes: data.notes || null,
+    status: "scheduled",
+  });
+  if (error) throw new Error("Não foi possível criar o agendamento");
+  return { ok: true };
+}
+
+export async function updateAppointmentStatusForAdmin(userId: string, id: string, status: string) {
+  await assertAdmin(userId);
+  const { error } = await supabaseAdmin
+    .from("appointments")
+    .update({ status })
+    .eq("id", id)
+    .eq("trainer_id", userId);
+  if (error) throw new Error("Não foi possível atualizar o agendamento");
+  return { ok: true };
+}
+
+export async function deleteAppointmentForAdmin(userId: string, id: string) {
+  await assertAdmin(userId);
+  const { error } = await supabaseAdmin
+    .from("appointments")
+    .delete()
+    .eq("id", id)
+    .eq("trainer_id", userId);
+  if (error) throw new Error("Não foi possível excluir o agendamento");
+  return { ok: true };
+}
