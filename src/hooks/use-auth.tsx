@@ -17,12 +17,19 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 async function fetchRole(userId: string): Promise<Role> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .maybeSingle();
-  return (data?.role as Role) ?? "aluno";
+    .order("role", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("Erro ao carregar perfil de acesso", error);
+    return null;
+  }
+
+  return (data?.[0]?.role as Role) ?? "aluno";
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

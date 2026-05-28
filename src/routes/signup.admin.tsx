@@ -19,15 +19,15 @@ const schema = z.object({
 
 function SignupAdminPage() {
   const navigate = useNavigate();
-  const { user, role: currentRole } = useAuth();
+  const { user, role: currentRole, loading: authLoading } = useAuth();
   const [form, setForm] = useState({ name: "", email: "", password: "", inviteCode: "" });
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) navigate({ to: currentRole === "trainer" ? "/" : "/aluno", replace: true });
-  }, [user, currentRole, navigate]);
+    if (!authLoading && user && currentRole) navigate({ to: currentRole === "trainer" ? "/dashboard" : "/aluno", replace: true });
+  }, [authLoading, user, currentRole, navigate]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
