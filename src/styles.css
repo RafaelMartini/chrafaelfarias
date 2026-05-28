@@ -61,6 +61,10 @@
   --shadow-offset-x: 0px;
   --shadow-offset-y: 2px;
   --letter-spacing: 0em;
+  --glow-primary: 0 0 80px color-mix(in oklab, var(--primary) 24%, transparent);
+  --glow-card: 0 24px 90px color-mix(in oklab, var(--primary) 8%, transparent);
+  --gradient-page: radial-gradient(circle at 18% 8%, color-mix(in oklab, var(--primary) 13%, transparent) 0, transparent 34%), radial-gradient(circle at 82% 16%, color-mix(in oklab, var(--primary) 8%, transparent) 0, transparent 30%), linear-gradient(180deg, var(--background), color-mix(in oklab, var(--background) 84%, black));
+  --gradient-card: linear-gradient(145deg, color-mix(in oklab, var(--card) 90%, white 5%), color-mix(in oklab, var(--card) 92%, black));
 }
 
 .dark {
@@ -117,6 +121,10 @@
   --shadow-lg: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 4px 6px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
   --shadow-xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 8px 10px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
   --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
+  --glow-primary: 0 0 80px color-mix(in oklab, var(--primary) 18%, transparent);
+  --glow-card: 0 24px 90px color-mix(in oklab, var(--primary) 6%, transparent);
+  --gradient-page: radial-gradient(circle at 18% 8%, color-mix(in oklab, var(--primary) 10%, transparent) 0, transparent 34%), radial-gradient(circle at 82% 16%, color-mix(in oklab, var(--ring) 8%, transparent) 0, transparent 30%), linear-gradient(180deg, var(--background), color-mix(in oklab, var(--background) 84%, black));
+  --gradient-card: linear-gradient(145deg, color-mix(in oklab, var(--card) 88%, white 4%), color-mix(in oklab, var(--card) 92%, black));
 }
 
 @theme inline {
@@ -220,10 +228,63 @@
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    min-height: 100%;
+    background: var(--gradient-page);
+    background-attachment: fixed;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background-image: linear-gradient(color-mix(in oklab, var(--foreground) 4%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--foreground) 4%, transparent) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: linear-gradient(to bottom, black, transparent 68%);
   }
   .font-mono { font-family: var(--font-mono); }
   body {
     letter-spacing: var(--tracking-normal);
+  }
+}
+
+@layer components {
+  .bg-background {
+    background-color: color-mix(in oklab, var(--background) 92%, transparent);
+  }
+
+  .bg-surface,
+  .bg-card {
+    background: var(--gradient-card);
+    box-shadow: var(--glow-card);
+  }
+
+  .border-border {
+    border-color: color-mix(in oklab, var(--border) 78%, var(--primary) 10%);
+  }
+
+  input,
+  textarea,
+  select {
+    border-radius: var(--radius);
+    background: color-mix(in oklab, var(--card) 82%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in oklab, var(--foreground) 7%, transparent);
+  }
+
+  button,
+  a {
+    text-underline-offset: 4px;
+  }
+
+  [class*="bg-accent"][class*="text-background"],
+  [class*="bg-primary"][class*="text-primary-foreground"] {
+    border-radius: var(--radius);
+    box-shadow: var(--glow-primary);
+  }
+
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
   }
 }
 
