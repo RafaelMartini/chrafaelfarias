@@ -18,6 +18,7 @@ import { Route as AlunoRouteImport } from './routes/aluno'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignupAdminRouteImport } from './routes/signup.admin'
+import { Route as AlunosStudentIdRouteImport } from './routes/alunos.$studentId'
 import { Route as AlunoProgressoRouteImport } from './routes/aluno.progresso'
 import { Route as AlunoAgendaRouteImport } from './routes/aluno.agenda'
 
@@ -66,6 +67,11 @@ const SignupAdminRoute = SignupAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => SignupRoute,
 } as any)
+const AlunosStudentIdRoute = AlunosStudentIdRouteImport.update({
+  id: '/$studentId',
+  path: '/$studentId',
+  getParentRoute: () => AlunosRoute,
+} as any)
 const AlunoProgressoRoute = AlunoProgressoRouteImport.update({
   id: '/progresso',
   path: '/progresso',
@@ -81,26 +87,28 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/aluno': typeof AlunoRouteWithChildren
-  '/alunos': typeof AlunosRoute
+  '/alunos': typeof AlunosRouteWithChildren
   '/biblioteca': typeof BibliotecaRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRouteWithChildren
   '/aluno/agenda': typeof AlunoAgendaRoute
   '/aluno/progresso': typeof AlunoProgressoRoute
+  '/alunos/$studentId': typeof AlunosStudentIdRoute
   '/signup/admin': typeof SignupAdminRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/aluno': typeof AlunoRouteWithChildren
-  '/alunos': typeof AlunosRoute
+  '/alunos': typeof AlunosRouteWithChildren
   '/biblioteca': typeof BibliotecaRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRouteWithChildren
   '/aluno/agenda': typeof AlunoAgendaRoute
   '/aluno/progresso': typeof AlunoProgressoRoute
+  '/alunos/$studentId': typeof AlunosStudentIdRoute
   '/signup/admin': typeof SignupAdminRoute
 }
 export interface FileRoutesById {
@@ -108,13 +116,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/aluno': typeof AlunoRouteWithChildren
-  '/alunos': typeof AlunosRoute
+  '/alunos': typeof AlunosRouteWithChildren
   '/biblioteca': typeof BibliotecaRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRouteWithChildren
   '/aluno/agenda': typeof AlunoAgendaRoute
   '/aluno/progresso': typeof AlunoProgressoRoute
+  '/alunos/$studentId': typeof AlunosStudentIdRoute
   '/signup/admin': typeof SignupAdminRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/aluno/agenda'
     | '/aluno/progresso'
+    | '/alunos/$studentId'
     | '/signup/admin'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/aluno/agenda'
     | '/aluno/progresso'
+    | '/alunos/$studentId'
     | '/signup/admin'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/aluno/agenda'
     | '/aluno/progresso'
+    | '/alunos/$studentId'
     | '/signup/admin'
   fileRoutesById: FileRoutesById
 }
@@ -163,7 +175,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgendaRoute: typeof AgendaRoute
   AlunoRoute: typeof AlunoRouteWithChildren
-  AlunosRoute: typeof AlunosRoute
+  AlunosRoute: typeof AlunosRouteWithChildren
   BibliotecaRoute: typeof BibliotecaRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
@@ -235,6 +247,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupAdminRouteImport
       parentRoute: typeof SignupRoute
     }
+    '/alunos/$studentId': {
+      id: '/alunos/$studentId'
+      path: '/$studentId'
+      fullPath: '/alunos/$studentId'
+      preLoaderRoute: typeof AlunosStudentIdRouteImport
+      parentRoute: typeof AlunosRoute
+    }
     '/aluno/progresso': {
       id: '/aluno/progresso'
       path: '/progresso'
@@ -264,6 +283,17 @@ const AlunoRouteChildren: AlunoRouteChildren = {
 
 const AlunoRouteWithChildren = AlunoRoute._addFileChildren(AlunoRouteChildren)
 
+interface AlunosRouteChildren {
+  AlunosStudentIdRoute: typeof AlunosStudentIdRoute
+}
+
+const AlunosRouteChildren: AlunosRouteChildren = {
+  AlunosStudentIdRoute: AlunosStudentIdRoute,
+}
+
+const AlunosRouteWithChildren =
+  AlunosRoute._addFileChildren(AlunosRouteChildren)
+
 interface SignupRouteChildren {
   SignupAdminRoute: typeof SignupAdminRoute
 }
@@ -279,7 +309,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgendaRoute: AgendaRoute,
   AlunoRoute: AlunoRouteWithChildren,
-  AlunosRoute: AlunosRoute,
+  AlunosRoute: AlunosRouteWithChildren,
   BibliotecaRoute: BibliotecaRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
