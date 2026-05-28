@@ -31,6 +31,17 @@ export type AddExerciseToWorkoutInput = {
   rest_seconds: number | null;
 };
 
+type StudentProfile = {
+  id: string;
+  user_id: string;
+  display_name: string | null;
+  phone: string | null;
+  goal: string | null;
+  birthdate?: string | null;
+  trainer_id?: string | null;
+  created_at?: string;
+};
+
 async function assertAdmin(userId: string) {
   const { data, error } = await supabaseAdmin
     .from("user_roles")
@@ -46,14 +57,57 @@ async function assertAdmin(userId: string) {
 export async function listStudentsForAdmin(userId: string) {
   await assertAdmin(userId);
 
+  const { data: roleRows, error: rolesError } = await supabaseAdmin
+    .from("user_roles")
+    .select("user_id")
+    .eq("role", "aluno");
+
+  if (rolesError) throw new Error("Não foi possível carregar os alunos");
+
+  const studentIds = (roleRows ?? []).map((row) => row.user_id).filter((id) => id !== userId);
+  if (studentIds.length === 0) return [];
+
   const { data, error } = await supabaseAdmin
     .from("profiles")
     .select("id, user_id, display_name, phone, goal, birthdate, created_at")
-    .eq("trainer_id", userId)
+    .in("user_id", studentIds)
+    .or(`trainer_id.is.null,trainer_id.eq.${userId}`)
     .order("created_at", { ascending: false });
 
   if (error) throw new Error("Não foi possível carregar os alunos");
   return data ?? [];
+}
+
+export async function getAdminOverviewForAdmin(userId: string) {
+  await assertAdmin(userId);
+
+  const students = await listStudentsForAdmin(userId);
+
+  const [{ count: exercisesCount }, { count: workoutsCount }, { data: appointments }] = await Promise.all([
+    supabaseAdmin
+      .from("exercises")
+      .select("id", { count: "exact", head: true })
+      .eq("trainer_id", userId),
+    supabaseAdmin
+      .from("workouts")
+      .select("id", { count: "exact", head: true })
+      .eq("trainer_id", userId),
+    supabaseAdmin
+      .from("appointments")
+      .select("id, scheduled_at, duration_minutes, status, student_id")
+      .eq("trainer_id", userId)
+      .gte("scheduled_at", new Date().toISOString())
+      .order("scheduled_at", { ascending: true })
+      .limit(3),
+  ]);
+
+  return {
+    studentsCount: students.length,
+    exercisesCount: exercisesCount ?? 0,
+    workoutsCount: workoutsCount ?? 0,
+    recentStudents: students.slice(0, 5),
+    upcomingAppointments: appointments ?? [],
+  };
 }
 
 export async function createStudentForAdmin(userId: string, data: CreateStudentInput) {
@@ -150,13 +204,15 @@ export async function getStudentWorkoutsForAdmin(userId: string, studentId: stri
 
   const { data: student, error: studentErr } = await supabaseAdmin
     .from("profiles")
-    .select("id, user_id, display_name, phone, goal")
+    .select("id, user_id, display_name, phone, goal, trainer_id")
     .eq("user_id", studentId)
-    .eq("trainer_id", userId)
     .maybeSingle();
 
   if (studentErr) throw new Error("Não foi possível carregar o aluno");
-  if (!student) throw new Error("Aluno não encontrado ou não vinculado a este admin");
+  if (!student) throw new Error("Aluno não encontrado");
+  if ((student as StudentProfile).trainer_id && (student as StudentProfile).trainer_id !== userId) {
+    throw new Error("Aluno vinculado a outro admin");
+  }
 
   const { data: workouts, error: workoutErr } = await supabaseAdmin
     .from("workouts")
@@ -199,13 +255,24 @@ export async function createWorkoutForAdmin(userId: string, data: CreateWorkoutI
 
   const { data: student, error: studentErr } = await supabaseAdmin
     .from("profiles")
-    .select("user_id")
+    .select("user_id, trainer_id")
     .eq("user_id", data.studentId)
-    .eq("trainer_id", userId)
     .maybeSingle();
 
   if (studentErr) throw new Error("Não foi possível validar o aluno");
-  if (!student) throw new Error("Aluno não encontrado ou não vinculado a este admin");
+  if (!student) throw new Error("Aluno não encontrado");
+  if ((student as StudentProfile).trainer_id && (student as StudentProfile).trainer_id !== userId) {
+    throw new Error("Aluno vinculado a outro admin");
+  }
+
+  if (!(student as StudentProfile).trainer_id) {
+    const { error: linkErr } = await supabaseAdmin
+      .from("profiles")
+      .update({ trainer_id: userId })
+      .eq("user_id", data.studentId)
+      .is("trainer_id", null);
+    if (linkErr) throw new Error("Não foi possível vincular o aluno a este admin");
+  }
 
   const { data: row, error } = await supabaseAdmin
     .from("workouts")

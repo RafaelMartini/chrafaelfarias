@@ -8,6 +8,7 @@ import {
   createWorkoutForAdmin,
   deleteExerciseForAdmin,
   deleteWorkoutForAdmin,
+  getAdminOverviewForAdmin,
   getStudentWorkoutsForAdmin,
   listExercisesForAdmin,
   listStudentsForAdmin,
@@ -48,6 +49,10 @@ const workoutItemSchema = z.object({
 export const listMyStudents = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => listStudentsForAdmin(context.userId));
+
+export const getAdminOverview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => getAdminOverviewForAdmin(context.userId));
 
 export const createStudent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
