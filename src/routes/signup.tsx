@@ -120,7 +120,7 @@ function SignupPage() {
           </div>
 
           {error && <p className="text-xs font-mono text-destructive uppercase">{error}</p>}
-          {info && <p className="text-xs font-mono text-accent uppercase">{info}</p>}
+          {info && <p className="text-xs font-mono text-primary uppercase">{info}</p>}
 
           <button
             type="submit"
@@ -146,7 +146,7 @@ function SignupPage() {
 
         <p className="mt-8 text-xs font-mono uppercase text-muted-foreground text-center">
           Já tem conta?{" "}
-          <Link to="/login" className="text-accent hover:underline">Entrar</Link>
+          <Link to="/login" className="text-primary hover:underline">Entrar</Link>
         </p>
       </div>
     </div>

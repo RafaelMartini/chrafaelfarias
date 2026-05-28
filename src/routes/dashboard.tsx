@@ -19,7 +19,7 @@ function AdminDashboard() {
       <section className="space-y-8 animate-reveal">
         <div className="flex items-end justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs font-mono uppercase tracking-[0.2em] text-accent mb-2">Admin Performance</p>
+            <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Admin Performance</p>
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight uppercase">Visão Geral do Ecossistema</h1>
           </div>
           <div className="text-right hidden sm:block">
@@ -85,7 +85,7 @@ function AdminDashboard() {
                 <div>
                   <p className="text-sm font-bold uppercase">{a.student}</p>
                   <p className="text-xs text-muted-foreground font-mono">{a.location} • {a.time}</p>
-                  <span className={`inline-block mt-1 text-[9px] font-mono uppercase ${a.modality === "presencial" ? "text-accent" : "text-foreground"}`}>
+                  <span className={`inline-block mt-1 text-[9px] font-mono uppercase ${a.modality === "presencial" ? "text-primary" : "text-foreground"}`}>
                     {a.modality}
                   </span>
                 </div>

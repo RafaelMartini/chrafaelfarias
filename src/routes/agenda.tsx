@@ -25,7 +25,7 @@ function AgendaPage() {
     <Shell mode="admin">
       <div className="flex items-end justify-between mb-10 animate-reveal flex-wrap gap-4">
         <div>
-          <p className="text-xs font-mono uppercase tracking-[0.2em] text-accent mb-2">Calendário</p>
+          <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Calendário</p>
           <h1 className="text-4xl font-extrabold uppercase tracking-tight">Agenda Semanal</h1>
         </div>
         <div className="flex rounded-full border border-border bg-card/70 p-1 shadow-xl backdrop-blur-xl">
@@ -40,7 +40,7 @@ function AgendaPage() {
           const isHighlight = daySlots.length > 0;
           return (
             <div key={d} className="flex flex-col gap-3">
-              <span className={`text-[10px] font-mono text-center uppercase tracking-tighter ${isHighlight ? "text-accent" : "text-muted-foreground"}`}>
+              <span className={`text-[10px] font-mono text-center uppercase tracking-tighter ${isHighlight ? "text-primary" : "text-muted-foreground"}`}>
                 {d}
               </span>
               <div className={`flex min-h-40 flex-col gap-2 rounded-3xl border bg-card/75 p-3 shadow-xl backdrop-blur-xl ${isHighlight ? "border-primary/50" : "border-border"}`}>

@@ -12,7 +12,7 @@ function AlunosPage() {
     <Shell mode="admin">
       <div className="flex items-end justify-between mb-10 animate-reveal">
         <div>
-          <p className="text-xs font-mono uppercase tracking-[0.2em] text-accent mb-2">Gestão</p>
+          <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Gestão</p>
           <h1 className="text-4xl font-extrabold uppercase tracking-tight">Alunos</h1>
         </div>
         <button className="rounded-full bg-primary px-5 py-3 text-xs font-extrabold uppercase tracking-widest text-primary-foreground transition-transform hover:scale-[1.03]">

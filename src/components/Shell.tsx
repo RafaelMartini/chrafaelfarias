@@ -58,7 +58,7 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
             <>
               <Link
                 to={mode === "admin" ? "/aluno" : "/dashboard"}
-                className="hidden rounded-full border border-border px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-accent hover:bg-secondary hover:text-accent sm:inline-flex"
+                className="hidden rounded-full border border-border px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-primary hover:bg-secondary hover:text-primary sm:inline-flex"
               >
                 {mode === "admin" ? "Ver portal aluno" : "Painel admin"}
               </Link>
@@ -68,7 +68,7 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
               >
                 Sair
               </button>
-              <div className="flex size-9 items-center justify-center rounded-full border border-accent/40 bg-accent/20 text-[10px] font-mono text-accent shadow-lg">
+              <div className="flex size-9 items-center justify-center rounded-full border border-primary/40 bg-primary/20 text-[10px] font-mono text-primary shadow-lg">
                 {initials}
               </div>
             </>
@@ -76,7 +76,7 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
             <>
               <Link
                 to="/login"
-                className="rounded-full border border-border px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-accent hover:bg-secondary hover:text-accent"
+                className="rounded-full border border-border px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-primary hover:bg-secondary hover:text-primary"
               >
                 Entrar
               </Link>
@@ -97,9 +97,9 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
         <div className="mx-auto flex flex-col items-center justify-between gap-8 md:flex-row">
           <div className="text-xs font-mono text-muted-foreground uppercase">© 2026 Rafael Faria PERFORMANCE SYSTEMS</div>
           <div className="flex gap-8">
-            <a href="#" className="text-xs font-extrabold uppercase tracking-widest hover:text-accent">Privacidade</a>
-            <a href="#" className="text-xs font-extrabold uppercase tracking-widest hover:text-accent">Termos</a>
-            <a href="#" className="text-xs font-extrabold uppercase tracking-widest hover:text-accent">Suporte</a>
+            <a href="#" className="text-xs font-extrabold uppercase tracking-widest hover:text-primary">Privacidade</a>
+            <a href="#" className="text-xs font-extrabold uppercase tracking-widest hover:text-primary">Termos</a>
+            <a href="#" className="text-xs font-extrabold uppercase tracking-widest hover:text-primary">Suporte</a>
           </div>
         </div>
       </footer>
@@ -109,8 +109,8 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
 
 export function MetricCard({ label, value, suffix, hint, highlight }: { label: string; value: string | number; suffix?: string; hint?: string; highlight?: boolean }) {
   return (
-    <div className={`rounded-3xl border border-border bg-card/80 p-6 shadow-2xl backdrop-blur-xl ${highlight ? "bg-accent/10 border-accent/40" : "hover:border-accent/40"} transition-all hover:-translate-y-1`}>
-      <p className={`text-xs font-mono uppercase mb-4 ${highlight ? "text-accent" : "text-muted-foreground"}`}>{label}</p>
+    <div className={`rounded-3xl border border-border bg-card/80 p-6 shadow-2xl backdrop-blur-xl ${highlight ? "bg-primary/10 border-primary/40" : "hover:border-primary/40"} transition-all hover:-translate-y-1`}>
+      <p className={`text-xs font-mono uppercase mb-4 ${highlight ? "text-primary" : "text-muted-foreground"}`}>{label}</p>
       <div className="flex items-baseline gap-2">
         <span className="text-5xl font-extrabold tabular-nums">{value}</span>
         {suffix && <span className="text-2xl font-extrabold">{suffix}</span>}

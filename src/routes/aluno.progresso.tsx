@@ -28,7 +28,7 @@ function Progresso() {
   return (
     <Shell mode="student">
       <div className="mb-10 animate-reveal">
-        <p className="text-xs font-mono uppercase tracking-[0.2em] text-accent mb-2">Evolução</p>
+        <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Evolução</p>
         <h1 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Seu Progresso</h1>
         <p className="text-muted-foreground mt-3 max-w-xl">
           Acompanhe suas conquistas, cargas e composição corporal ao longo do tempo.

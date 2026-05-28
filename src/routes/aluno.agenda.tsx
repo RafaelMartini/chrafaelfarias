@@ -42,7 +42,7 @@ function StudentAgenda() {
   return (
     <Shell mode="student">
       <div className="mb-10 animate-reveal">
-        <p className="text-xs font-mono uppercase tracking-[0.2em] text-accent mb-2">Agendamentos</p>
+        <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Agendamentos</p>
         <h1 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Horários Disponíveis</h1>
         <p className="text-muted-foreground mt-3 max-w-xl">
           Escolha modalidade, unidade e horário com o seu personal. Horários em verde estão livres.
@@ -75,7 +75,7 @@ function StudentAgenda() {
       {/* Próximos agendamentos confirmados */}
       <section className="mb-8 animate-reveal [animation-delay:150ms]">
         <h2 className="text-sm font-extrabold uppercase tracking-widest mb-4 flex items-center gap-2">
-          <CheckCircle2 className="size-4 text-accent" />
+          <CheckCircle2 className="size-4 text-primary" />
           Confirmados
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -159,7 +159,7 @@ function StudentAgenda() {
           <span>Disponível</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="size-3 text-accent" />
+          <CheckCircle2 className="size-3 text-primary" />
           <span>Confirmado</span>
         </div>
         <div className="flex items-center gap-1.5">

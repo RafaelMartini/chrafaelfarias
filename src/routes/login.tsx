@@ -109,7 +109,7 @@ function LoginPage() {
 
         <p className="mt-8 text-xs font-mono uppercase text-muted-foreground text-center">
           Não tem conta?{" "}
-          <Link to="/signup" className="text-accent hover:underline">Cadastre-se</Link>
+          <Link to="/signup" className="text-primary hover:underline">Cadastre-se</Link>
         </p>
       </div>
     </div>

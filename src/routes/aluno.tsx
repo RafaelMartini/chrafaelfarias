@@ -16,7 +16,7 @@ function AlunoPage() {
       <section className="space-y-8 animate-reveal">
         <div className="flex items-end justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs font-mono uppercase tracking-[0.2em] text-accent mb-2">Olá, Mariana</p>
+            <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Olá, Mariana</p>
             <h1 className="text-4xl md:text-5xl font-extrabold uppercase tracking-tight">Treino do Dia</h1>
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -109,7 +109,7 @@ function AlunoPage() {
                 <div className="text-right">
                   <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-tighter">META: 80KG</p>
                   <div className="w-24 h-1 bg-border mt-1">
-                    <div className="h-full bg-accent w-1/3" />
+                    <div className="h-full bg-primary w-1/3" />
                   </div>
                 </div>
               </div>
@@ -120,7 +120,7 @@ function AlunoPage() {
                 </div>
                 <div className="bg-background/50 border border-border/30 p-3 rounded-2xl">
                   <p className="text-[9px] font-mono text-muted-foreground uppercase">Streak</p>
-                  <p className="text-xl font-extrabold text-accent">12d</p>
+                  <p className="text-xl font-extrabold text-primary">12d</p>
                 </div>
               </div>
             </div>
