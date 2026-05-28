@@ -283,10 +283,10 @@ export const removeExerciseFromWorkout = createServerFn({ method: "POST" })
       .from("workout_exercises")
       .select("id, workout:workouts!inner(trainer_id)")
       .eq("id", data.id)
+      .maybeSingle();
     if (rErr) throw new Error(rErr.message);
     const trainerId = (row as { workout?: { trainer_id?: string } } | null)?.workout?.trainer_id;
     if (!row || trainerId !== userId) throw new Error("Não autorizado");
-    const { error } = await supabaseAdmin.from("workout_exercises").delete().eq("id", data.id);
     const { error } = await supabaseAdmin.from("workout_exercises").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
