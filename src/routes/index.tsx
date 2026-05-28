@@ -83,14 +83,14 @@ function Landing() {
         </section>
 
         {/* FEATURES */}
-        <section className="px-6 pb-24 max-w-7xl mx-auto">
+        <section className="mx-auto max-w-7xl px-6 pb-24">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {features.map(({ icon: Icon, title, text }) => (
               <div
                 key={title}
-                className="bg-surface/60 backdrop-blur-sm border border-border p-6 rounded-lg hover:border-accent/40 transition-colors group"
+                className="group rounded-3xl border border-border bg-card/75 p-6 shadow-2xl backdrop-blur-xl transition-all hover:-translate-y-1 hover:border-primary/40"
               >
-                <Icon className="size-7 text-accent mb-5 group-hover:scale-110 transition-transform" />
+                <Icon className="mb-5 size-7 text-primary transition-transform group-hover:scale-110" />
                 <h3 className="text-base font-extrabold tracking-tight mb-2">{title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>
               </div>
@@ -99,22 +99,22 @@ function Landing() {
         </section>
 
         {/* SECONDARY CTA */}
-        <section className="px-6 pb-32 max-w-4xl mx-auto text-center">
-          <div className="border border-border bg-surface/40 rounded-2xl p-10 md:p-16">
-            <p className="text-xs font-mono uppercase tracking-[0.3em] text-accent mb-4">Pronto para começar?</p>
+        <section className="mx-auto max-w-4xl px-6 pb-32 text-center">
+          <div className="rounded-3xl border border-border bg-card/70 p-10 shadow-2xl backdrop-blur-xl md:p-16">
+            <p className="mb-4 text-xs font-mono uppercase tracking-[0.3em] text-primary">Pronto para começar?</p>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
               Comece agora sua jornada de performance.
             </h2>
             <div className="mt-8 flex flex-wrap gap-3 justify-center">
               <Link
                 to="/signup"
-                className="bg-accent text-background font-extrabold uppercase tracking-wide px-6 py-3 text-sm rounded-full hover:bg-accent/90 transition-colors"
+                className="rounded-full bg-primary px-6 py-3 text-sm font-extrabold uppercase tracking-wide text-primary-foreground transition-transform hover:scale-[1.03]"
               >
                 Criar conta grátis
               </Link>
               <Link
                 to="/login"
-                className="border border-border font-bold uppercase tracking-wide px-6 py-3 text-sm rounded-full hover:border-accent hover:text-accent transition-colors"
+                className="rounded-full border border-border px-6 py-3 text-sm font-bold uppercase tracking-wide transition-colors hover:border-primary hover:bg-secondary hover:text-primary"
               >
                 Já tenho acesso
               </Link>
@@ -123,7 +123,7 @@ function Landing() {
         </section>
       </main>
 
-      <footer className="relative z-10 border-t border-border py-8 px-6 text-center">
+      <footer className="relative z-10 mx-auto mb-6 max-w-7xl rounded-3xl border border-border bg-card/60 px-6 py-8 text-center backdrop-blur-xl">
         <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
           © 2026 Rafael Faria Performance Systems
         </p>
