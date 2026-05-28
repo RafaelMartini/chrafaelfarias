@@ -21,15 +21,17 @@ async function fetchRole(userId: string): Promise<Role> {
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .order("role", { ascending: false })
-    .limit(1);
+    .in("role", ["trainer", "aluno"]);
 
   if (error) {
     console.error("Erro ao carregar perfil de acesso", error);
     return null;
   }
 
-  return (data?.[0]?.role as Role) ?? "aluno";
+  const roles = (data ?? []).map((row) => row.role);
+  if (roles.includes("trainer")) return "trainer";
+  if (roles.includes("aluno")) return "aluno";
+  return null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
