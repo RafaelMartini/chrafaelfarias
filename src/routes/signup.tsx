@@ -101,10 +101,6 @@ function SignupPage() {
             />
           </div>
 
-          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-            Esta conta é exclusiva para alunos.{" "}
-            <Link to="/signup/personal" className="text-primary hover:underline">Sou personal trainer</Link>
-          </p>
 
 
 
@@ -138,6 +134,16 @@ function SignupPage() {
           Já tem conta?{" "}
           <Link to="/login" className="text-primary hover:underline">Entrar</Link>
         </p>
+
+        <div className="mt-6 border-t border-border pt-4 text-center">
+          <Link
+            to="/signup/personal"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-3 py-1.5 text-[9px] font-mono uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+          >
+            <span className="size-1.5 rounded-full bg-primary/60" />
+            Acesso Admin / Personal
+          </Link>
+        </div>
       </div>
     </div>
   );
