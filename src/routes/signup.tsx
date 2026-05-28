@@ -62,10 +62,10 @@ function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 bg-background py-12">
-      <div className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-transparent px-6 py-12">
+      <div className="w-full max-w-md rounded-3xl border border-border bg-card/75 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
         <Link to="/" className="inline-block">
-          <img src={logo} alt="Coach Rafael Faria" className="h-28 w-auto" />
+          <img src={logo} alt="Coach Rafael Faria" className="h-24 w-auto sm:h-28" />
         </Link>
         <h1 className="mt-10 text-4xl font-extrabold uppercase tracking-tight">Criar conta</h1>
         <p className="mt-2 text-sm text-muted-foreground font-mono uppercase">Comece sua jornada de performance</p>
@@ -76,7 +76,7 @@ function SignupPage() {
             <input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="mt-2 w-full bg-surface border border-border px-4 py-3 font-mono text-sm focus:border-accent outline-none"
+              className="mt-2 w-full border border-border bg-card/70 px-4 py-3 font-mono text-sm outline-none transition-colors focus:border-primary"
             />
           </div>
           <div>
@@ -86,7 +86,7 @@ function SignupPage() {
               autoComplete="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="mt-2 w-full bg-surface border border-border px-4 py-3 font-mono text-sm focus:border-accent outline-none"
+              className="mt-2 w-full border border-border bg-card/70 px-4 py-3 font-mono text-sm outline-none transition-colors focus:border-primary"
             />
           </div>
           <div>
@@ -96,7 +96,7 @@ function SignupPage() {
               autoComplete="new-password"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="mt-2 w-full bg-surface border border-border px-4 py-3 font-mono text-sm focus:border-accent outline-none"
+              className="mt-2 w-full border border-border bg-card/70 px-4 py-3 font-mono text-sm outline-none transition-colors focus:border-primary"
             />
           </div>
           <div>
@@ -109,8 +109,8 @@ function SignupPage() {
                   onClick={() => setForm({ ...form, role: r })}
                   className={`py-3 text-xs font-extrabold uppercase tracking-widest border transition-colors ${
                     form.role === r
-                      ? "bg-accent text-background border-accent"
-                      : "border-border hover:border-accent"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border hover:border-primary hover:bg-secondary"
                   }`}
                 >
                   {r === "trainer" ? "Personal" : "Aluno"}
@@ -120,12 +120,12 @@ function SignupPage() {
           </div>
 
           {error && <p className="text-xs font-mono text-destructive uppercase">{error}</p>}
-          {info && <p className="text-xs font-mono text-accent uppercase">{info}</p>}
+          {info && <p className="text-xs font-mono text-primary uppercase">{info}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-accent text-background font-extrabold uppercase tracking-widest py-4 text-sm hover:bg-accent/90 disabled:opacity-50 transition-colors"
+            className="w-full rounded-full bg-primary py-4 text-sm font-extrabold uppercase tracking-widest text-primary-foreground transition-transform hover:scale-[1.02] disabled:opacity-50"
           >
             {loading ? "Criando..." : "Criar conta"}
           </button>
@@ -139,14 +139,14 @@ function SignupPage() {
 
         <button
           onClick={onGoogle}
-          className="w-full border border-border font-bold uppercase tracking-widest py-4 text-sm hover:border-accent hover:text-accent transition-colors"
+          className="w-full rounded-full border border-border py-4 text-sm font-bold uppercase tracking-widest transition-colors hover:border-primary hover:bg-secondary hover:text-primary"
         >
           Continuar com Google
         </button>
 
         <p className="mt-8 text-xs font-mono uppercase text-muted-foreground text-center">
           Já tem conta?{" "}
-          <Link to="/login" className="text-accent hover:underline">Entrar</Link>
+          <Link to="/login" className="text-primary hover:underline">Entrar</Link>
         </p>
       </div>
     </div>

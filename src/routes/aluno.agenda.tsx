@@ -42,7 +42,7 @@ function StudentAgenda() {
   return (
     <Shell mode="student">
       <div className="mb-10 animate-reveal">
-        <p className="text-xs font-mono uppercase tracking-[0.2em] text-accent mb-2">Agendamentos</p>
+        <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Agendamentos</p>
         <h1 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Horários Disponíveis</h1>
         <p className="text-muted-foreground mt-3 max-w-xl">
           Escolha modalidade, unidade e horário com o seu personal. Horários em verde estão livres.
@@ -62,8 +62,8 @@ function StudentAgenda() {
               onClick={() => setFilter(f)}
               className={`px-4 py-2 text-[10px] font-mono uppercase tracking-widest border rounded-full transition-colors ${
                 filter === f
-                  ? "bg-accent text-background border-accent font-bold"
-                  : "border-border hover:border-accent hover:text-accent"
+                  ? "bg-primary text-primary-foreground border-primary font-bold"
+                  : "border-border hover:border-primary hover:bg-secondary hover:text-primary"
               }`}
             >
               {f === "todos" ? "Todos" : f === "presencial" ? "Presencial" : "Online"}
@@ -75,7 +75,7 @@ function StudentAgenda() {
       {/* Próximos agendamentos confirmados */}
       <section className="mb-8 animate-reveal [animation-delay:150ms]">
         <h2 className="text-sm font-extrabold uppercase tracking-widest mb-4 flex items-center gap-2">
-          <CheckCircle2 className="size-4 text-accent" />
+          <CheckCircle2 className="size-4 text-primary" />
           Confirmados
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -83,10 +83,10 @@ function StudentAgenda() {
             { date: "MAI 28", day: "Quarta", time: "07:00", location: "Jardins", type: "presencial" as const },
             { date: "MAI 30", day: "Sexta", time: "10:00", location: "Jardins", type: "presencial" as const },
           ].map((a) => (
-            <div key={`${a.date}-${a.time}`} className="bg-accent/5 border border-accent/20 p-4 rounded-2xl flex items-center gap-4">
-              <div className="flex flex-col items-center bg-background border border-accent/30 w-12 py-2 rounded-xl shrink-0">
-                <span className="text-[9px] font-mono text-accent uppercase">{a.date.split(" ")[0]}</span>
-                <span className="text-base font-extrabold text-accent">{a.date.split(" ")[1]}</span>
+            <div key={`${a.date}-${a.time}`} className="flex items-center gap-4 rounded-3xl border border-primary/30 bg-primary/10 p-4 shadow-xl backdrop-blur-xl">
+              <div className="flex w-12 shrink-0 flex-col items-center rounded-2xl border border-primary/30 bg-background/50 py-2">
+                <span className="text-[9px] font-mono text-primary uppercase">{a.date.split(" ")[0]}</span>
+                <span className="text-base font-extrabold text-primary">{a.date.split(" ")[1]}</span>
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold uppercase truncate">{a.day} às {a.time}</p>
@@ -103,7 +103,7 @@ function StudentAgenda() {
       {/* Grade de horários */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-reveal [animation-delay:200ms]">
         {filteredSlots.map((s) => (
-          <div key={s.date} className="bg-surface border border-border p-5 sm:p-6 rounded-2xl">
+          <div key={s.date} className="rounded-3xl border border-border bg-card/75 p-5 shadow-2xl backdrop-blur-xl sm:p-6">
             <div className="flex items-center gap-4 mb-5">
               <div className="flex flex-col items-center bg-background border border-border w-14 py-2 rounded-2xl shrink-0">
                 <span className="text-[10px] font-mono text-muted-foreground uppercase">{s.date.split(" ")[0]}</span>
@@ -119,9 +119,9 @@ function StudentAgenda() {
             <div className="space-y-2">
               {s.times.map((t) => {
                 const statusConfig = {
-                  disponivel: { bg: "hover:bg-accent hover:text-background", border: "hover:border-accent", icon: <Clock className="size-3" />, label: "Disponível" },
+                  disponivel: { bg: "hover:bg-primary hover:text-primary-foreground", border: "hover:border-primary", icon: <Clock className="size-3" />, label: "Disponível" },
                   ocupado: { bg: "opacity-40 cursor-not-allowed", border: "", icon: <span className="size-3 rounded-full bg-destructive/50" />, label: "Ocupado" },
-                  reservado: { bg: "bg-accent/10", border: "border-accent/30", icon: <CheckCircle2 className="size-3 text-accent" />, label: "Confirmado" },
+                  reservado: { bg: "bg-primary/10", border: "border-primary/30", icon: <CheckCircle2 className="size-3 text-primary" />, label: "Confirmado" },
                 };
                 const config = statusConfig[t.status];
                 return (
@@ -159,7 +159,7 @@ function StudentAgenda() {
           <span>Disponível</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="size-3 text-accent" />
+          <CheckCircle2 className="size-3 text-primary" />
           <span>Confirmado</span>
         </div>
         <div className="flex items-center gap-1.5">

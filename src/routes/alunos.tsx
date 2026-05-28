@@ -12,15 +12,15 @@ function AlunosPage() {
     <Shell mode="admin">
       <div className="flex items-end justify-between mb-10 animate-reveal">
         <div>
-          <p className="text-xs font-mono uppercase tracking-[0.2em] text-accent mb-2">Gestão</p>
+          <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Gestão</p>
           <h1 className="text-4xl font-extrabold uppercase tracking-tight">Alunos</h1>
         </div>
-        <button className="bg-accent text-background px-5 py-3 text-xs font-extrabold uppercase tracking-widest hover:brightness-110 transition">
+        <button className="rounded-full bg-primary px-5 py-3 text-xs font-extrabold uppercase tracking-widest text-primary-foreground transition-transform hover:scale-[1.03]">
           + Novo Aluno
         </button>
       </div>
 
-      <div className="bg-surface border border-border overflow-hidden animate-reveal [animation-delay:100ms] rounded-2xl">
+      <div className="overflow-x-auto rounded-3xl border border-border bg-card/75 shadow-2xl backdrop-blur-xl animate-reveal [animation-delay:100ms]">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-border text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
@@ -37,7 +37,7 @@ function AlunosPage() {
               <tr key={s.id} className="hover:bg-background/40 transition-colors">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="size-9 bg-background border border-border flex items-center justify-center font-mono text-[10px] text-accent rounded-2xl">{s.initials}</div>
+                    <div className="flex size-9 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10 font-mono text-[10px] text-primary">{s.initials}</div>
                     <span className="font-bold uppercase tracking-tight">{s.name}</span>
                   </div>
                 </td>
@@ -46,18 +46,18 @@ function AlunosPage() {
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
                     <div className="w-16 h-1 bg-border">
-                      <div className={`h-full ${s.compliance > 85 ? "bg-accent" : "bg-muted-foreground"}`} style={{ width: `${s.compliance}%` }} />
+                      <div className={`h-full ${s.compliance > 85 ? "bg-primary" : "bg-muted-foreground"}`} style={{ width: `${s.compliance}%` }} />
                     </div>
                     <span className="text-xs font-mono">{s.compliance}%</span>
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`text-[10px] font-mono uppercase px-2 py-1 ${s.status === "active" ? "text-accent bg-accent/10" : s.status === "missed" ? "text-destructive bg-destructive/10" : "text-foreground bg-secondary"}`}>
+                  <span className={`rounded-full px-3 py-1 text-[10px] font-mono uppercase ${s.status === "active" ? "text-primary bg-primary/10" : s.status === "missed" ? "text-destructive bg-destructive/10" : "text-foreground bg-secondary"}`}>
                     {s.status === "active" ? "ativo" : s.status === "missed" ? "faltou" : "novo"}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <button className="text-[10px] font-mono uppercase text-accent hover:underline">Montar Treino</button>
+                  <button className="text-[10px] font-mono uppercase text-primary hover:underline">Montar Treino</button>
                 </td>
               </tr>
             ))}

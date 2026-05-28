@@ -28,7 +28,7 @@ function Progresso() {
   return (
     <Shell mode="student">
       <div className="mb-10 animate-reveal">
-        <p className="text-xs font-mono uppercase tracking-[0.2em] text-accent mb-2">Evolução</p>
+        <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Evolução</p>
         <h1 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Seu Progresso</h1>
         <p className="text-muted-foreground mt-3 max-w-xl">
           Acompanhe suas conquistas, cargas e composição corporal ao longo do tempo.
@@ -46,17 +46,17 @@ function Progresso() {
       {/* Evolução de carga + Composição corporal */}
       <section className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6 animate-reveal [animation-delay:200ms]">
         {/* Gráfico de cargas */}
-        <div className="bg-surface border border-border p-6 sm:p-8 rounded-2xl">
+        <div className="rounded-3xl border border-border bg-card/75 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-extrabold uppercase">Evolução de Carga</h2>
-            <span className="text-[10px] font-mono uppercase text-accent bg-accent/10 px-2 py-1 rounded-full">Esta semana</span>
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-mono uppercase text-primary">Esta semana</span>
           </div>
           <div className="flex items-end justify-between gap-2 h-48">
             {weeklyData.map((d) => (
               <div key={d.day} className="flex flex-col items-center gap-2 flex-1">
                 <div className="w-full flex items-end justify-center">
                   <div
-                    className="w-full max-w-8 bg-accent/80 rounded-t-md transition-all hover:bg-accent relative group"
+                     className="relative w-full max-w-8 rounded-t-md bg-primary/80 transition-all hover:bg-primary group"
                     style={{ height: `${(d.load / d.max) * 100}%` }}
                   >
                     <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
@@ -70,28 +70,28 @@ function Progresso() {
           </div>
           <div className="mt-4 flex items-center gap-4 text-[10px] font-mono uppercase text-muted-foreground">
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-accent rounded-sm" />
+              <div className="h-3 w-3 rounded-sm bg-primary" />
               <span>Carga (kg)</span>
             </div>
             <div className="flex items-center gap-1">
-              <TrendingUp className="size-3 text-accent" />
+              <TrendingUp className="size-3 text-primary" />
               <span>+12% vs semana anterior</span>
             </div>
           </div>
         </div>
 
         {/* Composição corporal */}
-        <div className="bg-surface border border-border p-6 sm:p-8 rounded-2xl">
+        <div className="rounded-3xl border border-border bg-card/75 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-extrabold uppercase">Composição Corporal</h2>
             <span className="text-[10px] font-mono uppercase text-muted-foreground">Atualizado há 3 dias</span>
           </div>
           <div className="space-y-5">
             {[
-              { label: "Peso", value: "84.2 kg", target: "80 kg", pct: 33, color: "bg-accent" },
-              { label: "% Gordura", value: "18%", target: "14%", pct: 50, color: "bg-yellow-500" },
-              { label: "Massa Magra", value: "69 kg", target: "72 kg", pct: 60, color: "bg-emerald-500" },
-              { label: "IMC", value: "24.5", target: "22.0", pct: 70, color: "bg-blue-500" },
+              { label: "Peso", value: "84.2 kg", target: "80 kg", pct: 33, color: "bg-primary" },
+              { label: "% Gordura", value: "18%", target: "14%", pct: 50, color: "bg-chart-3" },
+              { label: "Massa Magra", value: "69 kg", target: "72 kg", pct: 60, color: "bg-chart-2" },
+              { label: "IMC", value: "24.5", target: "22.0", pct: 70, color: "bg-chart-1" },
             ].map((m) => (
               <div key={m.label}>
                 <div className="flex justify-between items-baseline mb-2">
@@ -118,12 +118,12 @@ function Progresso() {
                 key={m.label}
                 className={`p-5 border rounded-2xl flex items-start gap-4 transition-all ${
                   m.earned
-                    ? "bg-accent/5 border-accent/30"
-                    : "bg-surface border-border opacity-50"
+                    ? "bg-primary/10 border-primary/30 shadow-xl backdrop-blur-xl"
+                    : "bg-card/75 border-border opacity-50 shadow-xl backdrop-blur-xl"
                 }`}
               >
-                <div className={`shrink-0 size-10 rounded-full flex items-center justify-center ${m.earned ? "bg-accent/20" : "bg-muted/20"}`}>
-                  <Icon className={`size-5 ${m.earned ? "text-accent" : "text-muted-foreground"}`} />
+                <div className={`shrink-0 size-10 rounded-full flex items-center justify-center ${m.earned ? "bg-primary/20" : "bg-muted/20"}`}>
+                  <Icon className={`size-5 ${m.earned ? "text-primary" : "text-muted-foreground"}`} />
                 </div>
                 <div>
                   <p className={`text-sm font-bold ${m.earned ? "text-foreground" : "text-muted-foreground"}`}>{m.label}</p>
@@ -137,14 +137,14 @@ function Progresso() {
 
       {/* Resumo do mês */}
       <section className="mt-8 animate-reveal [animation-delay:400ms]">
-        <div className="bg-surface border border-border p-6 sm:p-8 rounded-2xl">
+        <div className="rounded-3xl border border-border bg-card/75 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <h2 className="text-lg font-extrabold uppercase">Resumo do Mês</h2>
               <p className="text-sm text-muted-foreground mt-1">Maio de 2026</p>
             </div>
             <div className="flex items-center gap-2">
-              <CalendarCheck className="size-4 text-accent" />
+              <CalendarCheck className="size-4 text-primary" />
               <span className="text-sm font-bold">18 de 20 treinos realizados</span>
             </div>
           </div>
@@ -158,7 +158,7 @@ function Progresso() {
               <div key={stat.label} className="bg-background/50 border border-border/30 p-4 rounded-2xl text-center">
                 <p className="text-[10px] font-mono uppercase text-muted-foreground mb-1">{stat.label}</p>
                 <p className="text-2xl font-extrabold">{stat.value}</p>
-                <p className="text-[10px] font-mono text-accent mt-1">{stat.change}</p>
+                <p className="mt-1 text-[10px] font-mono text-primary">{stat.change}</p>
               </div>
             ))}
           </div>

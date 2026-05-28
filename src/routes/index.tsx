@@ -32,24 +32,24 @@ function Landing() {
   }, [user, role, loading, navigate]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
-      {/* radial glow */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--accent)_0%,_transparent_50%)] opacity-[0.08]" />
+    <div className="relative min-h-screen overflow-hidden bg-transparent text-foreground">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,_color-mix(in_oklab,var(--primary)_18%,transparent),_transparent_38%)]" />
+      <div className="pointer-events-none absolute left-1/2 top-20 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
 
-      <header className="relative z-10 flex items-center justify-between px-6 md:px-12 py-6">
+      <header className="relative z-10 mx-auto mt-3 flex w-[calc(100%-1.5rem)] max-w-7xl items-center justify-between rounded-3xl border border-border bg-card/70 px-4 py-3 shadow-2xl backdrop-blur-xl sm:px-6">
         <Link to="/" className="flex items-center">
-          <img src={logo} alt="Coach Rafael Faria" className="h-28 w-auto" />
+          <img src={logo} alt="Coach Rafael Faria" className="h-20 w-auto sm:h-24 lg:h-28" />
         </Link>
         <div className="flex items-center gap-3">
           <Link
             to="/login"
-            className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors px-3 py-2"
+            className="rounded-full px-3 py-2 text-xs font-mono uppercase tracking-widest text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
             Entrar
           </Link>
           <Link
             to="/signup"
-            className="text-xs font-extrabold uppercase tracking-widest bg-accent text-background px-4 py-2 hover:bg-accent/90 transition-colors"
+            className="rounded-full bg-primary px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-primary-foreground transition-transform hover:scale-[1.03]"
           >
             Criar conta
           </Link>
@@ -58,20 +58,23 @@ function Landing() {
 
       <main className="relative z-10">
         {/* HERO */}
-        <section className="px-6 pt-20 pb-24 md:pt-32 md:pb-32 text-center max-w-5xl mx-auto animate-reveal">
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[1.02]">
+        <section className="mx-auto max-w-6xl px-6 pb-24 pt-16 text-center animate-reveal md:pb-32 md:pt-24">
+          <div className="mb-6 inline-flex rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.3em] text-primary">
+            Novo painel integrado
+          </div>
+          <h1 className="text-5xl font-extrabold leading-[0.96] tracking-tight md:text-7xl lg:text-8xl">
             Seu treino,<br />
             sua evolução,<br />
-            <span className="text-accent">minha entrega.</span>
+            <span className="text-primary drop-shadow-[0_0_34px_color-mix(in_oklab,var(--primary)_45%,transparent)]">minha entrega.</span>
           </h1>
-          <p className="mt-8 max-w-2xl mx-auto text-base md:text-lg text-muted-foreground leading-relaxed">
+          <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
             Plataforma exclusiva com treinos montados manualmente, vídeos demonstrativos
             e acompanhamento real da sua performance.
           </p>
           <div className="mt-10 flex justify-center">
             <Link
               to="/login"
-              className="group relative inline-flex items-center gap-3 bg-accent text-background font-extrabold uppercase tracking-wide px-8 py-4 text-sm md:text-base rounded-full hover:scale-[1.02] transition-transform shadow-[0_0_60px_-10px_var(--accent)]"
+              className="group relative inline-flex items-center gap-3 rounded-full bg-primary px-8 py-4 text-sm font-extrabold uppercase tracking-wide text-primary-foreground transition-transform hover:scale-[1.02] md:text-base"
             >
               Acessar minha conta
               <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
@@ -80,14 +83,14 @@ function Landing() {
         </section>
 
         {/* FEATURES */}
-        <section className="px-6 pb-24 max-w-7xl mx-auto">
+        <section className="mx-auto max-w-7xl px-6 pb-24">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {features.map(({ icon: Icon, title, text }) => (
               <div
                 key={title}
-                className="bg-surface/60 backdrop-blur-sm border border-border p-6 rounded-lg hover:border-accent/40 transition-colors group"
+                className="group rounded-3xl border border-border bg-card/75 p-6 shadow-2xl backdrop-blur-xl transition-all hover:-translate-y-1 hover:border-primary/40"
               >
-                <Icon className="size-7 text-accent mb-5 group-hover:scale-110 transition-transform" />
+                <Icon className="mb-5 size-7 text-primary transition-transform group-hover:scale-110" />
                 <h3 className="text-base font-extrabold tracking-tight mb-2">{title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>
               </div>
@@ -96,22 +99,22 @@ function Landing() {
         </section>
 
         {/* SECONDARY CTA */}
-        <section className="px-6 pb-32 max-w-4xl mx-auto text-center">
-          <div className="border border-border bg-surface/40 rounded-2xl p-10 md:p-16">
-            <p className="text-xs font-mono uppercase tracking-[0.3em] text-accent mb-4">Pronto para começar?</p>
+        <section className="mx-auto max-w-4xl px-6 pb-32 text-center">
+          <div className="rounded-3xl border border-border bg-card/70 p-10 shadow-2xl backdrop-blur-xl md:p-16">
+            <p className="mb-4 text-xs font-mono uppercase tracking-[0.3em] text-primary">Pronto para começar?</p>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
               Comece agora sua jornada de performance.
             </h2>
             <div className="mt-8 flex flex-wrap gap-3 justify-center">
               <Link
                 to="/signup"
-                className="bg-accent text-background font-extrabold uppercase tracking-wide px-6 py-3 text-sm rounded-full hover:bg-accent/90 transition-colors"
+                className="rounded-full bg-primary px-6 py-3 text-sm font-extrabold uppercase tracking-wide text-primary-foreground transition-transform hover:scale-[1.03]"
               >
                 Criar conta grátis
               </Link>
               <Link
                 to="/login"
-                className="border border-border font-bold uppercase tracking-wide px-6 py-3 text-sm rounded-full hover:border-accent hover:text-accent transition-colors"
+                className="rounded-full border border-border px-6 py-3 text-sm font-bold uppercase tracking-wide transition-colors hover:border-primary hover:bg-secondary hover:text-primary"
               >
                 Já tenho acesso
               </Link>
@@ -120,7 +123,7 @@ function Landing() {
         </section>
       </main>
 
-      <footer className="relative z-10 border-t border-border py-8 px-6 text-center">
+      <footer className="relative z-10 mx-auto mb-6 max-w-7xl rounded-3xl border border-border bg-card/60 px-6 py-8 text-center backdrop-blur-xl">
         <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
           © 2026 Rafael Faria Performance Systems
         </p>
