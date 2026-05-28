@@ -16,24 +16,6 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-async function fetchRole(userId: string): Promise<Role> {
-  const { data, error } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .in("role", ["trainer", "aluno"]);
-
-  if (error) {
-    console.error("Erro ao carregar perfil de acesso", error);
-    return null;
-  }
-
-  const roles = (data ?? []).map((row) => row.role);
-  if (roles.includes("trainer")) return "trainer";
-  if (roles.includes("aluno")) return "aluno";
-  return null;
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<Role>(null);
@@ -42,46 +24,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
 
   useEffect(() => {
-    let active = true;
-
     const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
-      if (!active) return;
       setSession(s);
       if (s?.user) {
-        setLoading(true);
         // defer to avoid deadlock
         setTimeout(() => {
-          fetchRole(s.user.id).then((r) => {
-            if (!active) return;
-            setRole(r);
-            setLoading(false);
-            router.invalidate();
-            qc.invalidateQueries();
-          });
+          supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", s.user.id)
+            .maybeSingle()
+            .then(({ data }) => setRole((data?.role as Role) ?? "aluno"));
         }, 0);
       } else {
         setRole(null);
-        setLoading(false);
-        router.invalidate();
-        qc.invalidateQueries();
       }
+      router.invalidate();
+      qc.invalidateQueries();
     });
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!active) return;
+    supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       if (data.session?.user) {
-        const r = await fetchRole(data.session.user.id);
-        if (!active) return;
-        setRole(r);
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.session.user.id)
+          .maybeSingle()
+          .then(({ data: r }) => setRole((r?.role as Role) ?? "aluno"));
       }
       setLoading(false);
     });
 
-    return () => {
-      active = false;
-      sub.subscription.unsubscribe();
-    };
+    return () => sub.subscription.unsubscribe();
   }, [router, qc]);
 
   const signOut = async () => {

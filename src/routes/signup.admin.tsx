@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import logo from "@/assets/logo-rafael-faria.png";
 
-export const Route = createFileRoute("/signup_/admin")({
+export const Route = createFileRoute("/signup/admin")({
   head: () => ({ meta: [{ title: "Cadastro Admin — Rafael Faria" }] }),
   component: SignupAdminPage,
 });
@@ -19,15 +19,15 @@ const schema = z.object({
 
 function SignupAdminPage() {
   const navigate = useNavigate();
-  const { user, role: currentRole, loading: authLoading } = useAuth();
+  const { user, role: currentRole } = useAuth();
   const [form, setForm] = useState({ name: "", email: "", password: "", inviteCode: "" });
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && user && currentRole) navigate({ to: currentRole === "trainer" ? "/dashboard" : "/aluno", replace: true });
-  }, [authLoading, user, currentRole, navigate]);
+    if (user) navigate({ to: currentRole === "trainer" ? "/" : "/aluno", replace: true });
+  }, [user, currentRole, navigate]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

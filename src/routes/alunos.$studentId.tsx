@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Shell } from "@/components/Shell";
@@ -13,7 +13,7 @@ import {
   listMyExercises,
 } from "@/lib/admin.functions";
 
-export const Route = createFileRoute("/alunos_/$studentId")({
+export const Route = createFileRoute("/alunos/$studentId")({
   head: () => ({ meta: [{ title: "Treinos do Aluno — Rafael Faria" }] }),
   component: StudentDetailPage,
 });
@@ -27,11 +27,9 @@ function StudentDetailPage() {
   const get = useServerFn(getStudentWithWorkouts);
   const listEx = useServerFn(listMyExercises);
 
-  useEffect(() => {
-    if (!loading && (!user || role !== "trainer")) {
-      navigate({ to: "/login", replace: true });
-    }
-  }, [loading, user, role, navigate]);
+  if (!loading && (!user || role !== "trainer")) {
+    navigate({ to: "/login", replace: true });
+  }
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["student-workouts", studentId],

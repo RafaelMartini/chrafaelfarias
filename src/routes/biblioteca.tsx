@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Shell } from "@/components/Shell";
@@ -40,11 +40,9 @@ function BibliotecaPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    if (!loading && (!user || role !== "trainer")) {
-      navigate({ to: "/login", replace: true });
-    }
-  }, [loading, user, role, navigate]);
+  if (!loading && (!user || role !== "trainer")) {
+    navigate({ to: "/login", replace: true });
+  }
 
   const { data: exercises = [], isLoading } = useQuery({
     queryKey: ["my-exercises"],
