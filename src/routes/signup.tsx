@@ -101,10 +101,6 @@ function SignupPage() {
             />
           </div>
 
-          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-            Esta conta é exclusiva para alunos.{" "}
-            <Link to="/signup/personal" className="text-primary hover:underline">Sou personal trainer</Link>
-          </p>
 
 
 
