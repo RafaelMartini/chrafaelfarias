@@ -12,11 +12,16 @@ export const Route = createFileRoute("/signup")({
 });
 
 const schema = z.object({
+const schema = z.object({
   name: z.string().trim().min(2, "Informe seu nome").max(80),
   email: z.string().trim().email("E-mail inválido").max(255),
   password: z.string().min(6, "Mínimo 6 caracteres").max(72),
-  role: z.enum(["trainer", "aluno"]),
 });
+
+function SignupPage() {
+  const navigate = useNavigate();
+  const { user, role: currentRole } = useAuth();
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
 
 function SignupPage() {
   const navigate = useNavigate();
