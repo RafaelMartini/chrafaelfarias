@@ -32,24 +32,24 @@ function Landing() {
   }, [user, role, loading, navigate]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
-      {/* radial glow */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--accent)_0%,_transparent_50%)] opacity-[0.08]" />
+    <div className="relative min-h-screen overflow-hidden bg-transparent text-foreground">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,_color-mix(in_oklab,var(--primary)_18%,transparent),_transparent_38%)]" />
+      <div className="pointer-events-none absolute left-1/2 top-20 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
 
-      <header className="relative z-10 flex items-center justify-between px-6 md:px-12 py-6">
+      <header className="relative z-10 mx-auto mt-3 flex w-[calc(100%-1.5rem)] max-w-7xl items-center justify-between rounded-3xl border border-border bg-card/70 px-4 py-3 shadow-2xl backdrop-blur-xl sm:px-6">
         <Link to="/" className="flex items-center">
-          <img src={logo} alt="Coach Rafael Faria" className="h-28 w-auto" />
+          <img src={logo} alt="Coach Rafael Faria" className="h-20 w-auto sm:h-24 lg:h-28" />
         </Link>
         <div className="flex items-center gap-3">
           <Link
             to="/login"
-            className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors px-3 py-2"
+            className="rounded-full px-3 py-2 text-xs font-mono uppercase tracking-widest text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
             Entrar
           </Link>
           <Link
             to="/signup"
-            className="text-xs font-extrabold uppercase tracking-widest bg-accent text-background px-4 py-2 hover:bg-accent/90 transition-colors"
+            className="rounded-full bg-primary px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-primary-foreground transition-transform hover:scale-[1.03]"
           >
             Criar conta
           </Link>
@@ -58,20 +58,23 @@ function Landing() {
 
       <main className="relative z-10">
         {/* HERO */}
-        <section className="px-6 pt-20 pb-24 md:pt-32 md:pb-32 text-center max-w-5xl mx-auto animate-reveal">
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[1.02]">
+        <section className="mx-auto max-w-6xl px-6 pb-24 pt-16 text-center animate-reveal md:pb-32 md:pt-24">
+          <div className="mb-6 inline-flex rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.3em] text-primary">
+            Novo painel integrado
+          </div>
+          <h1 className="text-5xl font-extrabold leading-[0.96] tracking-tight md:text-7xl lg:text-8xl">
             Seu treino,<br />
             sua evolução,<br />
-            <span className="text-accent">minha entrega.</span>
+            <span className="text-primary drop-shadow-[0_0_34px_color-mix(in_oklab,var(--primary)_45%,transparent)]">minha entrega.</span>
           </h1>
-          <p className="mt-8 max-w-2xl mx-auto text-base md:text-lg text-muted-foreground leading-relaxed">
+          <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
             Plataforma exclusiva com treinos montados manualmente, vídeos demonstrativos
             e acompanhamento real da sua performance.
           </p>
           <div className="mt-10 flex justify-center">
             <Link
               to="/login"
-              className="group relative inline-flex items-center gap-3 bg-accent text-background font-extrabold uppercase tracking-wide px-8 py-4 text-sm md:text-base rounded-full hover:scale-[1.02] transition-transform shadow-[0_0_60px_-10px_var(--accent)]"
+              className="group relative inline-flex items-center gap-3 rounded-full bg-primary px-8 py-4 text-sm font-extrabold uppercase tracking-wide text-primary-foreground transition-transform hover:scale-[1.02] md:text-base"
             >
               Acessar minha conta
               <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
