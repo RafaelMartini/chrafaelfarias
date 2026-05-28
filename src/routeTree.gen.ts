@@ -18,10 +18,10 @@ import { Route as AlunoRouteImport } from './routes/aluno'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SignupAdminRouteImport } from './routes/signup.admin'
-import { Route as AlunosStudentIdRouteImport } from './routes/alunos.$studentId'
-import { Route as AlunoProgressoRouteImport } from './routes/aluno.progresso'
-import { Route as AlunoAgendaRouteImport } from './routes/aluno.agenda'
+import { Route as SignupAdminRouteImport } from './routes/signup_.admin'
+import { Route as AlunosStudentIdRouteImport } from './routes/alunos_.$studentId'
+import { Route as AlunoProgressoRouteImport } from './routes/aluno_.progresso'
+import { Route as AlunoAgendaRouteImport } from './routes/aluno_.agenda'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -69,36 +69,36 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupAdminRoute = SignupAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => SignupRoute,
+  id: '/signup_/admin',
+  path: '/signup/admin',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AlunosStudentIdRoute = AlunosStudentIdRouteImport.update({
-  id: '/$studentId',
-  path: '/$studentId',
-  getParentRoute: () => AlunosRoute,
+  id: '/alunos_/$studentId',
+  path: '/alunos/$studentId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AlunoProgressoRoute = AlunoProgressoRouteImport.update({
-  id: '/progresso',
-  path: '/progresso',
-  getParentRoute: () => AlunoRoute,
+  id: '/aluno_/progresso',
+  path: '/aluno/progresso',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AlunoAgendaRoute = AlunoAgendaRouteImport.update({
-  id: '/agenda',
-  path: '/agenda',
-  getParentRoute: () => AlunoRoute,
+  id: '/aluno_/agenda',
+  path: '/aluno/agenda',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/agenda': typeof AgendaRoute
-  '/aluno': typeof AlunoRouteWithChildren
-  '/alunos': typeof AlunosRouteWithChildren
+  '/aluno': typeof AlunoRoute
+  '/alunos': typeof AlunosRoute
   '/biblioteca': typeof BibliotecaRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
-  '/signup': typeof SignupRouteWithChildren
+  '/signup': typeof SignupRoute
   '/aluno/agenda': typeof AlunoAgendaRoute
   '/aluno/progresso': typeof AlunoProgressoRoute
   '/alunos/$studentId': typeof AlunosStudentIdRoute
@@ -108,12 +108,12 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/agenda': typeof AgendaRoute
-  '/aluno': typeof AlunoRouteWithChildren
-  '/alunos': typeof AlunosRouteWithChildren
+  '/aluno': typeof AlunoRoute
+  '/alunos': typeof AlunosRoute
   '/biblioteca': typeof BibliotecaRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
-  '/signup': typeof SignupRouteWithChildren
+  '/signup': typeof SignupRoute
   '/aluno/agenda': typeof AlunoAgendaRoute
   '/aluno/progresso': typeof AlunoProgressoRoute
   '/alunos/$studentId': typeof AlunosStudentIdRoute
@@ -124,16 +124,16 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/agenda': typeof AgendaRoute
-  '/aluno': typeof AlunoRouteWithChildren
-  '/alunos': typeof AlunosRouteWithChildren
+  '/aluno': typeof AlunoRoute
+  '/alunos': typeof AlunosRoute
   '/biblioteca': typeof BibliotecaRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
-  '/signup': typeof SignupRouteWithChildren
-  '/aluno/agenda': typeof AlunoAgendaRoute
-  '/aluno/progresso': typeof AlunoProgressoRoute
-  '/alunos/$studentId': typeof AlunosStudentIdRoute
-  '/signup/admin': typeof SignupAdminRoute
+  '/signup': typeof SignupRoute
+  '/aluno_/agenda': typeof AlunoAgendaRoute
+  '/aluno_/progresso': typeof AlunoProgressoRoute
+  '/alunos_/$studentId': typeof AlunosStudentIdRoute
+  '/signup_/admin': typeof SignupAdminRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -177,22 +177,26 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/signup'
-    | '/aluno/agenda'
-    | '/aluno/progresso'
-    | '/alunos/$studentId'
-    | '/signup/admin'
+    | '/aluno_/agenda'
+    | '/aluno_/progresso'
+    | '/alunos_/$studentId'
+    | '/signup_/admin'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AgendaRoute: typeof AgendaRoute
-  AlunoRoute: typeof AlunoRouteWithChildren
-  AlunosRoute: typeof AlunosRouteWithChildren
+  AlunoRoute: typeof AlunoRoute
+  AlunosRoute: typeof AlunosRoute
   BibliotecaRoute: typeof BibliotecaRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
-  SignupRoute: typeof SignupRouteWithChildren
+  SignupRoute: typeof SignupRoute
+  AlunoAgendaRoute: typeof AlunoAgendaRoute
+  AlunoProgressoRoute: typeof AlunoProgressoRoute
+  AlunosStudentIdRoute: typeof AlunosStudentIdRoute
+  SignupAdminRoute: typeof SignupAdminRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -260,81 +264,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/signup/admin': {
-      id: '/signup/admin'
-      path: '/admin'
+    '/signup_/admin': {
+      id: '/signup_/admin'
+      path: '/signup/admin'
       fullPath: '/signup/admin'
       preLoaderRoute: typeof SignupAdminRouteImport
-      parentRoute: typeof SignupRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/alunos/$studentId': {
-      id: '/alunos/$studentId'
-      path: '/$studentId'
+    '/alunos_/$studentId': {
+      id: '/alunos_/$studentId'
+      path: '/alunos/$studentId'
       fullPath: '/alunos/$studentId'
       preLoaderRoute: typeof AlunosStudentIdRouteImport
-      parentRoute: typeof AlunosRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/aluno/progresso': {
-      id: '/aluno/progresso'
-      path: '/progresso'
+    '/aluno_/progresso': {
+      id: '/aluno_/progresso'
+      path: '/aluno/progresso'
       fullPath: '/aluno/progresso'
       preLoaderRoute: typeof AlunoProgressoRouteImport
-      parentRoute: typeof AlunoRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/aluno/agenda': {
-      id: '/aluno/agenda'
-      path: '/agenda'
+    '/aluno_/agenda': {
+      id: '/aluno_/agenda'
+      path: '/aluno/agenda'
       fullPath: '/aluno/agenda'
       preLoaderRoute: typeof AlunoAgendaRouteImport
-      parentRoute: typeof AlunoRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface AlunoRouteChildren {
-  AlunoAgendaRoute: typeof AlunoAgendaRoute
-  AlunoProgressoRoute: typeof AlunoProgressoRoute
-}
-
-const AlunoRouteChildren: AlunoRouteChildren = {
-  AlunoAgendaRoute: AlunoAgendaRoute,
-  AlunoProgressoRoute: AlunoProgressoRoute,
-}
-
-const AlunoRouteWithChildren = AlunoRoute._addFileChildren(AlunoRouteChildren)
-
-interface AlunosRouteChildren {
-  AlunosStudentIdRoute: typeof AlunosStudentIdRoute
-}
-
-const AlunosRouteChildren: AlunosRouteChildren = {
-  AlunosStudentIdRoute: AlunosStudentIdRoute,
-}
-
-const AlunosRouteWithChildren =
-  AlunosRoute._addFileChildren(AlunosRouteChildren)
-
-interface SignupRouteChildren {
-  SignupAdminRoute: typeof SignupAdminRoute
-}
-
-const SignupRouteChildren: SignupRouteChildren = {
-  SignupAdminRoute: SignupAdminRoute,
-}
-
-const SignupRouteWithChildren =
-  SignupRoute._addFileChildren(SignupRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AgendaRoute: AgendaRoute,
-  AlunoRoute: AlunoRouteWithChildren,
-  AlunosRoute: AlunosRouteWithChildren,
+  AlunoRoute: AlunoRoute,
+  AlunosRoute: AlunosRoute,
   BibliotecaRoute: BibliotecaRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
-  SignupRoute: SignupRouteWithChildren,
+  SignupRoute: SignupRoute,
+  AlunoAgendaRoute: AlunoAgendaRoute,
+  AlunoProgressoRoute: AlunoProgressoRoute,
+  AlunosStudentIdRoute: AlunosStudentIdRoute,
+  SignupAdminRoute: SignupAdminRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
