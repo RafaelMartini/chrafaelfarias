@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Shell } from "@/components/Shell";
@@ -27,9 +27,11 @@ function StudentDetailPage() {
   const get = useServerFn(getStudentWithWorkouts);
   const listEx = useServerFn(listMyExercises);
 
-  if (!loading && (!user || role !== "trainer")) {
-    navigate({ to: "/login", replace: true });
-  }
+  useEffect(() => {
+    if (!loading && (!user || role !== "trainer")) {
+      navigate({ to: "/login", replace: true });
+    }
+  }, [loading, user, role, navigate]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["student-workouts", studentId],
