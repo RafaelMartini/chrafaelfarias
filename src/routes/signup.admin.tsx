@@ -5,9 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import logo from "@/assets/logo-rafael-faria.png";
 
-export const Route = createFileRoute("/signup/personal")({
-  head: () => ({ meta: [{ title: "Cadastro Personal — Rafael Faria" }] }),
-  component: SignupPersonalPage,
+export const Route = createFileRoute("/signup/admin")({
+  head: () => ({ meta: [{ title: "Cadastro Admin — Rafael Faria" }] }),
+  component: SignupAdminPage,
 });
 
 const schema = z.object({
@@ -17,7 +17,7 @@ const schema = z.object({
   inviteCode: z.string().trim().min(1, "Código de acesso é obrigatório"),
 });
 
-function SignupPersonalPage() {
+function SignupAdminPage() {
   const navigate = useNavigate();
   const { user, role: currentRole } = useAuth();
   const [form, setForm] = useState({ name: "", email: "", password: "", inviteCode: "" });
@@ -63,11 +63,11 @@ function SignupPersonalPage() {
           <img src={logo} alt="Coach Rafael Faria" className="h-24 w-auto sm:h-28" />
         </Link>
         <div className="mt-10 inline-flex rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-primary">
-          Área restrita · Personal
+          Área restrita · Admin
         </div>
-        <h1 className="mt-4 text-4xl font-extrabold uppercase tracking-tight">Cadastro Personal</h1>
+        <h1 className="mt-4 text-4xl font-extrabold uppercase tracking-tight">Cadastro Admin</h1>
         <p className="mt-2 text-sm text-muted-foreground font-mono uppercase">
-          Acesso exclusivo para coaches autorizados
+          Acesso exclusivo para administradores autorizados
         </p>
 
         <form onSubmit={onSubmit} className="mt-10 space-y-4">
