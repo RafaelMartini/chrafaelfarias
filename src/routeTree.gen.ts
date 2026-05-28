@@ -17,7 +17,7 @@ import { Route as AlunosRouteImport } from './routes/alunos'
 import { Route as AlunoRouteImport } from './routes/aluno'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SignupPersonalRouteImport } from './routes/signup.personal'
+import { Route as SignupAdminRouteImport } from './routes/signup.admin'
 import { Route as AlunoProgressoRouteImport } from './routes/aluno.progresso'
 import { Route as AlunoAgendaRouteImport } from './routes/aluno.agenda'
 
@@ -61,9 +61,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SignupPersonalRoute = SignupPersonalRouteImport.update({
-  id: '/personal',
-  path: '/personal',
+const SignupAdminRoute = SignupAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => SignupRoute,
 } as any)
 const AlunoProgressoRoute = AlunoProgressoRouteImport.update({
@@ -88,7 +88,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRouteWithChildren
   '/aluno/agenda': typeof AlunoAgendaRoute
   '/aluno/progresso': typeof AlunoProgressoRoute
-  '/signup/personal': typeof SignupPersonalRoute
+  '/signup/admin': typeof SignupAdminRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -101,7 +101,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRouteWithChildren
   '/aluno/agenda': typeof AlunoAgendaRoute
   '/aluno/progresso': typeof AlunoProgressoRoute
-  '/signup/personal': typeof SignupPersonalRoute
+  '/signup/admin': typeof SignupAdminRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -115,7 +115,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRouteWithChildren
   '/aluno/agenda': typeof AlunoAgendaRoute
   '/aluno/progresso': typeof AlunoProgressoRoute
-  '/signup/personal': typeof SignupPersonalRoute
+  '/signup/admin': typeof SignupAdminRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -130,7 +130,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/aluno/agenda'
     | '/aluno/progresso'
-    | '/signup/personal'
+    | '/signup/admin'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -143,7 +143,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/aluno/agenda'
     | '/aluno/progresso'
-    | '/signup/personal'
+    | '/signup/admin'
   id:
     | '__root__'
     | '/'
@@ -156,7 +156,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/aluno/agenda'
     | '/aluno/progresso'
-    | '/signup/personal'
+    | '/signup/admin'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -228,11 +228,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/signup/personal': {
-      id: '/signup/personal'
-      path: '/personal'
-      fullPath: '/signup/personal'
-      preLoaderRoute: typeof SignupPersonalRouteImport
+    '/signup/admin': {
+      id: '/signup/admin'
+      path: '/admin'
+      fullPath: '/signup/admin'
+      preLoaderRoute: typeof SignupAdminRouteImport
       parentRoute: typeof SignupRoute
     }
     '/aluno/progresso': {
@@ -265,11 +265,11 @@ const AlunoRouteChildren: AlunoRouteChildren = {
 const AlunoRouteWithChildren = AlunoRoute._addFileChildren(AlunoRouteChildren)
 
 interface SignupRouteChildren {
-  SignupPersonalRoute: typeof SignupPersonalRoute
+  SignupAdminRoute: typeof SignupAdminRoute
 }
 
 const SignupRouteChildren: SignupRouteChildren = {
-  SignupPersonalRoute: SignupPersonalRoute,
+  SignupAdminRoute: SignupAdminRoute,
 }
 
 const SignupRouteWithChildren =
@@ -288,3 +288,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
