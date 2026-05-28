@@ -3,16 +3,20 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   addExerciseToWorkoutForAdmin,
+  createAppointmentForAdmin,
   createExerciseForAdmin,
   createStudentForAdmin,
   createWorkoutForAdmin,
+  deleteAppointmentForAdmin,
   deleteExerciseForAdmin,
   deleteWorkoutForAdmin,
   getAdminOverviewForAdmin,
   getStudentWorkoutsForAdmin,
+  listAppointmentsForAdmin,
   listExercisesForAdmin,
   listStudentsForAdmin,
   removeExerciseFromWorkoutForAdmin,
+  updateAppointmentStatusForAdmin,
 } from "./admin.server";
 
 const studentSchema = z.object({
