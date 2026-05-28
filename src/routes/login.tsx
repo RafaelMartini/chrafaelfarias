@@ -19,17 +19,17 @@ const schema = z.object({
 function LoginPage() {
   const navigate = useNavigate();
   const router = useRouter();
-  const { user, role } = useAuth();
+  const { user, role, loading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      navigate({ to: role === "trainer" ? "/" : "/aluno", replace: true });
+    if (!authLoading && user && role) {
+      navigate({ to: role === "trainer" ? "/dashboard" : "/aluno", replace: true });
     }
-  }, [user, role, navigate]);
+  }, [authLoading, user, role, navigate]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
