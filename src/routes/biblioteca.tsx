@@ -40,9 +40,11 @@ function BibliotecaPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
 
-  if (!loading && (!user || role !== "trainer")) {
-    navigate({ to: "/login", replace: true });
-  }
+  useEffect(() => {
+    if (!loading && (!user || role !== "trainer")) {
+      navigate({ to: "/login", replace: true });
+    }
+  }, [loading, user, role, navigate]);
 
   const { data: exercises = [], isLoading } = useQuery({
     queryKey: ["my-exercises"],
