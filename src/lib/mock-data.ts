@@ -46,6 +46,7 @@ export type WorkoutExercise = {
 };
 
 export type DayWorkout = {
+  id: string;
   day: string;
   name: string;
   exercises: WorkoutExercise[];
@@ -53,6 +54,7 @@ export type DayWorkout = {
 
 export const weekWorkouts: DayWorkout[] = [
   {
+    id: "seg",
     day: "SEGUNDA",
     name: "Lower Body Alpha",
     exercises: [
@@ -62,6 +64,7 @@ export const weekWorkouts: DayWorkout[] = [
     ],
   },
   {
+    id: "ter",
     day: "TERÇA",
     name: "Push Day",
     exercises: [
@@ -71,11 +74,13 @@ export const weekWorkouts: DayWorkout[] = [
     ],
   },
   {
+    id: "qua",
     day: "QUARTA",
     name: "Recovery / Mobilidade",
     exercises: [],
   },
   {
+    id: "qui",
     day: "QUINTA",
     name: "Pull Day",
     exercises: [
@@ -84,6 +89,7 @@ export const weekWorkouts: DayWorkout[] = [
     ],
   },
   {
+    id: "sex",
     day: "SEXTA",
     name: "Full Body Power",
     exercises: [
@@ -92,6 +98,9 @@ export const weekWorkouts: DayWorkout[] = [
     ],
   },
 ];
+
+// Total de treinos com exercícios na semana (dias de recovery não contam).
+export const trainingDaysCount = weekWorkouts.filter((w) => w.exercises.length > 0).length;
 
 export type Appointment = {
   id: string;

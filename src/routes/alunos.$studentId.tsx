@@ -1,9 +1,11 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { Shell } from "@/components/Shell";
-import { useAuth } from "@/hooks/use-auth";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useRequireTrainer } from "@/hooks/use-require-role";
 import {
   getStudentWithWorkouts,
   createWorkout,
@@ -22,14 +24,9 @@ const DAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sáb
 
 function StudentDetailPage() {
   const { studentId } = Route.useParams();
-  const { user, role, loading } = useAuth();
-  const navigate = useNavigate();
+  const { user, role } = useRequireTrainer();
   const get = useServerFn(getStudentWithWorkouts);
   const listEx = useServerFn(listMyExercises);
-
-  if (!loading && (!user || role !== "trainer")) {
-    navigate({ to: "/login", replace: true });
-  }
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["student-workouts", studentId],
@@ -109,15 +106,24 @@ function WorkoutCard({
   const removeItem = useServerFn(removeExerciseFromWorkout);
   const addItem = useServerFn(addExerciseToWorkout);
   const [adding, setAdding] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
   const [form, setForm] = useState({ exerciseId: "", sets: 3, reps: "10", load_kg: "", rest_seconds: 60 });
 
   const delMut = useMutation({
     mutationFn: () => del({ data: { id: workout.id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["student-workouts"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["student-workouts"] });
+      toast.success("Treino excluído", { description: workout.name });
+    },
+    onError: (e: Error) => toast.error("Erro ao excluir treino", { description: e.message }),
   });
   const removeMut = useMutation({
     mutationFn: (id: string) => removeItem({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["student-workouts"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["student-workouts"] });
+      toast.success("Exercício removido do treino");
+    },
+    onError: (e: Error) => toast.error("Erro ao remover", { description: e.message }),
   });
   const addMut = useMutation({
     mutationFn: () =>
@@ -133,6 +139,7 @@ function WorkoutCard({
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["student-workouts"] });
+      toast.success("Exercício adicionado ao treino");
       setAdding(false);
       setForm({ exerciseId: "", sets: 3, reps: "10", load_kg: "", rest_seconds: 60 });
     },
@@ -153,7 +160,7 @@ function WorkoutCard({
           {workout.notes && <p className="mt-2 text-xs font-mono text-muted-foreground">{workout.notes}</p>}
         </div>
         <button
-          onClick={() => { if (confirm(`Excluir treino "${workout.name}"?`)) delMut.mutate(); }}
+          onClick={() => setConfirmDel(true)}
           className="text-[10px] font-mono uppercase text-destructive hover:underline"
         >
           Excluir treino
@@ -220,6 +227,19 @@ function WorkoutCard({
           {addMut.error && <p className="col-span-full text-xs text-destructive font-mono">{(addMut.error as Error).message}</p>}
         </form>
       )}
+
+      <ConfirmDialog
+        open={confirmDel}
+        onOpenChange={setConfirmDel}
+        title="Excluir treino"
+        description={`"${workout.name}" e todos os seus exercícios serão removidos.`}
+        confirmLabel="Excluir"
+        destructive
+        onConfirm={() => {
+          delMut.mutate();
+          setConfirmDel(false);
+        }}
+      />
     </div>
   );
 }
@@ -243,6 +263,7 @@ function NewWorkoutModal({ studentId, onClose }: { studentId: string; onClose: (
     mutationFn: () => create({ data: { studentId, name: form.name, day_of_week: form.day_of_week, notes: form.notes } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["student-workouts", studentId] });
+      toast.success("Treino criado", { description: form.name });
       onClose();
     },
     onError: (e: Error) => setErr(e.message),

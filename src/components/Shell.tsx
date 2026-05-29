@@ -54,14 +54,15 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Alternador de portal sempre visível (modo demonstração / testes). */}
+          <Link
+            to={mode === "admin" ? "/aluno" : "/dashboard"}
+            className="rounded-full border border-border px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-primary hover:bg-secondary hover:text-primary"
+          >
+            {mode === "admin" ? "Portal aluno" : "Painel admin"}
+          </Link>
           {isAuthenticated ? (
             <>
-              <Link
-                to={mode === "admin" ? "/aluno" : "/dashboard"}
-                className="hidden rounded-full border border-border px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-primary hover:bg-secondary hover:text-primary sm:inline-flex"
-              >
-                {mode === "admin" ? "Ver portal aluno" : "Painel admin"}
-              </Link>
               <button
                 onClick={() => signOut()}
                 className="rounded-full border border-border px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-destructive hover:bg-secondary hover:text-destructive"
@@ -73,20 +74,12 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
               </div>
             </>
           ) : (
-            <>
-              <Link
-                to="/login"
-                className="rounded-full border border-border px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-primary hover:bg-secondary hover:text-primary"
-              >
-                Entrar
-              </Link>
-              <Link
-                to="/signup"
-                className="rounded-full bg-primary px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-primary-foreground transition-transform hover:scale-[1.03] sm:px-4"
-              >
-                Criar conta
-              </Link>
-            </>
+            <Link
+              to="/login"
+              className="hidden rounded-full border border-border px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-primary hover:bg-secondary hover:text-primary sm:inline-flex"
+            >
+              Entrar
+            </Link>
           )}
         </div>
       </nav>

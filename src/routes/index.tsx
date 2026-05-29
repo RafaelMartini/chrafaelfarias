@@ -43,15 +43,9 @@ function Landing() {
         <div className="flex items-center gap-3">
           <Link
             to="/login"
-            className="rounded-full px-3 py-2 text-xs font-mono uppercase tracking-widest text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          >
-            Entrar
-          </Link>
-          <Link
-            to="/signup"
             className="rounded-full bg-primary px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-primary-foreground transition-transform hover:scale-[1.03]"
           >
-            Criar conta
+            Entrar
           </Link>
         </div>
       </header>
@@ -71,15 +65,22 @@ function Landing() {
             Plataforma exclusiva com treinos montados manualmente, vídeos demonstrativos
             e acompanhamento real da sua performance.
           </p>
-          <div className="mt-10 flex justify-center">
+          <div className="mt-10 flex flex-wrap justify-center gap-3">
             <Link
-              to="/login"
+              to="/dashboard"
               className="group relative inline-flex items-center gap-3 rounded-full bg-primary px-8 py-4 text-sm font-extrabold uppercase tracking-wide text-primary-foreground transition-transform hover:scale-[1.02] md:text-base"
             >
               Acessar minha conta
               <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
             </Link>
+            <Link
+              to="/aluno"
+              className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-4 text-sm font-bold uppercase tracking-wide transition-colors hover:border-primary hover:bg-secondary hover:text-primary md:text-base"
+            >
+              Entrar como aluno
+            </Link>
           </div>
+          <p className="mt-4 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Modo demonstração · acesso livre, sem login</p>
         </section>
 
         {/* FEATURES */}
@@ -107,16 +108,10 @@ function Landing() {
             </h2>
             <div className="mt-8 flex flex-wrap gap-3 justify-center">
               <Link
-                to="/signup"
+                to="/dashboard"
                 className="rounded-full bg-primary px-6 py-3 text-sm font-extrabold uppercase tracking-wide text-primary-foreground transition-transform hover:scale-[1.03]"
               >
-                Criar conta grátis
-              </Link>
-              <Link
-                to="/login"
-                className="rounded-full border border-border px-6 py-3 text-sm font-bold uppercase tracking-wide transition-colors hover:border-primary hover:bg-secondary hover:text-primary"
-              >
-                Já tenho acesso
+                Acessar o sistema
               </Link>
             </div>
           </div>
