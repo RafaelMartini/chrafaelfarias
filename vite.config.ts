@@ -12,4 +12,16 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Deploy na Vercel: força o Nitro com o preset "vercel" e direciona a saída para
+  // a estrutura .vercel/output (Build Output API), que a Vercel detecta automaticamente.
+  // O wrapper Lovable, por padrão, joga a saída em dist/ — por isso sobrescrevemos os
+  // diretórios aqui. Para outro alvo, ajuste o preset/saída ou use a env NITRO_PRESET.
+  nitro: {
+    preset: process.env.NITRO_PRESET || "vercel",
+    output: {
+      dir: ".vercel/output",
+      serverDir: ".vercel/output/functions/__server.func",
+      publicDir: ".vercel/output/static",
+    },
+  },
 });
