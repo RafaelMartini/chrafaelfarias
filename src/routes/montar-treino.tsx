@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Trash2, Plus, Film, Eye, RotateCcw } from "lucide-react";
+import { Trash2, Plus, Film, Eye, RotateCcw, BookOpen } from "lucide-react";
 import { Shell } from "@/components/Shell";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { usePlan, type PlanExercise } from "@/lib/training-plan";
+import { useExercises } from "@/lib/exercises-store";
 import { embedUrl } from "@/lib/video";
 
 export const Route = createFileRoute("/montar-treino")({
@@ -16,6 +17,7 @@ const emptyForm = { name: "", videoUrl: "", description: "", sets: 3, reps: "10-
 
 function MontarTreinoPage() {
   const { plan, setWorkoutName, addExercise, removeExercise, reset } = usePlan();
+  const { exercises: library } = useExercises();
   const [selectedIdx, setSelectedIdx] = useState(1); // Segunda
   const [form, setForm] = useState(emptyForm);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -114,6 +116,32 @@ function MontarTreinoPage() {
             <h2 className="text-lg font-extrabold uppercase tracking-tight flex items-center gap-2">
               <Plus className="size-4 text-primary" /> Adicionar exercício
             </h2>
+
+            {/* Selecionar exercício já cadastrado na Biblioteca: preenche os campos abaixo. */}
+            <div>
+              <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                <BookOpen className="size-3" /> Da biblioteca
+              </label>
+              {library.length === 0 ? (
+                <p className="mt-1 text-[10px] font-mono uppercase text-muted-foreground">
+                  Nenhum exercício na biblioteca. <Link to="/biblioteca" className="text-primary hover:underline">Cadastre lá</Link> para selecioná-lo aqui.
+                </p>
+              ) : (
+                <div className="mt-1 flex max-h-32 flex-wrap gap-1.5 overflow-y-auto">
+                  {library.map((ex) => (
+                    <button
+                      key={ex.id}
+                      type="button"
+                      onClick={() => setForm({ ...form, name: ex.name, description: ex.description, videoUrl: ex.videoUrl })}
+                      title={ex.muscleGroup || ex.name}
+                      className="shrink-0 rounded-full border border-border px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary hover:bg-secondary hover:text-primary"
+                    >
+                      {ex.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <Field label="Nome do exercício *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required placeholder="Ex: Agachamento Livre" />
             <Field label="URL do vídeo (YouTube/Vimeo)" value={form.videoUrl} onChange={(v) => setForm({ ...form, videoUrl: v })} placeholder="https://youtube.com/watch?v=..." />

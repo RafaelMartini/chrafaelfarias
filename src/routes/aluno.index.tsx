@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Check, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { Check, RotateCcw } from "lucide-react";
 import { Shell } from "@/components/Shell";
-import { appointments } from "@/lib/mock-data";
 import { useWorkoutLog } from "@/lib/workout-log";
 import { usePlan } from "@/lib/training-plan";
 import { embedUrl } from "@/lib/video";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/aluno/")({
   head: () => ({ meta: [{ title: "Meu Treino — Rafael Faria" }] }),
@@ -16,6 +16,9 @@ export const Route = createFileRoute("/aluno/")({
 function AlunoPage() {
   const { plan, trainingDaysCount } = usePlan();
   const { completedCount, isCompleted, toggle } = useWorkoutLog();
+  const { user } = useAuth();
+  const firstName =
+    (user?.user_metadata?.display_name || user?.email || "").toString().split(/[\s@]/)[0] || "Aluno";
 
   // Dia selecionado: começa no primeiro dia com treino programado.
   const firstTrainingIdx = useMemo(() => {
@@ -59,7 +62,7 @@ function AlunoPage() {
       <section className="space-y-8 animate-reveal">
         <div className="flex items-end justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Olá, Mariana</p>
+            <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Olá, {firstName}</p>
             <h1 className="text-4xl md:text-5xl font-extrabold uppercase tracking-tight">
               {selectedIdx === firstTrainingIdx ? "Treino do Dia" : "Programação"}
             </h1>
@@ -197,29 +200,10 @@ function AlunoPage() {
         </div>
 
         <aside className="lg:col-span-4 space-y-6">
-          <Link
-            to="/montar-treino"
-            className="flex items-center justify-center gap-2 rounded-3xl border border-dashed border-primary/40 bg-primary/5 px-4 py-3 text-[10px] font-mono uppercase tracking-widest text-primary transition-colors hover:bg-primary/10"
-          >
-            <SlidersHorizontal className="size-3.5" /> Modo treinador: montar plano
-          </Link>
-
           <div className="rounded-3xl border border-border bg-card/75 p-6 shadow-2xl backdrop-blur-xl">
             <h3 className="text-lg font-extrabold uppercase mb-6">Próximos Agendamentos</h3>
             <div className="space-y-4">
-              {appointments.slice(0, 2).map((a) => (
-                <div key={a.id} className="flex gap-4">
-                  <div className="flex flex-col items-center bg-background border border-border w-12 py-2 shrink-0 rounded-2xl">
-                    <span className="text-[10px] font-mono text-muted-foreground uppercase">{a.date.split(" ")[0]}</span>
-                    <span className="text-lg font-extrabold">{a.date.split(" ")[1]}</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold uppercase">{a.modality === "presencial" ? "Treino presencial" : "Consultoria online"}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{a.location} • {a.time}</p>
-                    <button className="mt-1 text-[9px] font-mono uppercase text-primary hover:underline">Confirmar Presença</button>
-                  </div>
-                </div>
-              ))}
+              <p className="text-xs font-mono uppercase text-muted-foreground">Nenhum agendamento ainda.</p>
             </div>
             <Link to="/aluno/agenda" className="mt-6 block w-full rounded-full bg-primary py-3 text-center text-xs font-extrabold uppercase tracking-widest text-primary-foreground transition-transform hover:scale-[1.02]">
               Agendar Nova Aula

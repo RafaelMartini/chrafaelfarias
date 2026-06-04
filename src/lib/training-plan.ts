@@ -12,18 +12,7 @@ import { weekWorkouts, exercises } from "@/lib/mock-data";
  * apenas lendo). A forma de PlanDay/PlanExercise mapeia direto nessas tabelas.
  */
 
-const STORAGE_KEY = "rfp:training-plan";
-
-// Vídeo de demonstração (placeholder) para exercícios sem vídeo real definido.
-// O treinador substitui pela URL real na tela "Montar Treino".
-const DEMO_VIDEO = "https://www.youtube.com/watch?v=aqz-KE-bpKQ";
-
-// Vídeos reais de execução por exercício (validados via oEmbed do YouTube).
-const REAL_VIDEOS: Record<string, string> = {
-  e1: "https://www.youtube.com/watch?v=3Y2U3Agkvbs", // Agachamento Livre — Tay Training
-  e2: "https://www.youtube.com/watch?v=waAxlYvtCcI", // Leg Press 45º — Treino Mestre
-  e7: "https://www.youtube.com/watch?v=vXPbKrYIEaQ", // Stiff — Tay Training
-};
+const STORAGE_KEY = "rfp:training-plan:v2";
 
 export type PlanExercise = {
   id: string;
@@ -68,7 +57,7 @@ function buildSeed(): PlanDay[] {
           id: `${dayId}-${i}`,
           name: ex?.name ?? "Exercício",
           description: ex?.description ?? "",
-          videoUrl: REAL_VIDEOS[we.exerciseId] ?? DEMO_VIDEO,
+          videoUrl: "",
           sets: we.sets,
           reps: we.reps,
           load: we.load,

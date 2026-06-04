@@ -7,7 +7,7 @@ import { useSyncExternalStore } from "react";
  * status pendente). Persiste em localStorage e sincroniza a tela de agenda.
  */
 
-const STORAGE_KEY = "rfp:student-bookings";
+const STORAGE_KEY = "rfp:student-bookings:v2";
 
 /** Chave de um horário: `${date}|${time}` (ex.: "MAI 28|07:00"). */
 export type SlotKey = string;

@@ -1,5 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { type ReactNode } from "react";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import logo from "@/assets/logo-rafael-faria.png";
 
@@ -19,7 +19,31 @@ const studentNav = [
 export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?: "admin" | "student" }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const nav = mode === "admin" ? adminNav : studentNav;
-  const { user, signOut } = useAuth();
+  const { user, role, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  // Guard de acesso por papel — separa o painel admin (treinador) do portal do aluno.
+  // - Sem login → /login
+  // - Painel admin acessado por aluno → manda pro /aluno
+  const adminBlocked = mode === "admin" && role !== null && role !== "trainer";
+  useEffect(() => {
+    if (loading) return;
+    if (!user) {
+      navigate({ to: "/login", replace: true });
+      return;
+    }
+    if (adminBlocked) navigate({ to: "/aluno", replace: true });
+  }, [loading, user, adminBlocked, navigate]);
+
+  // Enquanto resolve a sessão/papel, ou se o acesso não é permitido, não renderiza o conteúdo.
+  const resolving = loading || !user || (mode === "admin" && role === null);
+  if (resolving || adminBlocked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-transparent">
+        <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Carregando…</p>
+      </div>
+    );
+  }
 
   const initials = (user?.user_metadata?.display_name || user?.email || "")
     .toString()
@@ -55,13 +79,6 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Alternador de portal sempre visível (modo demonstração / testes). */}
-          <Link
-            to={mode === "admin" ? "/aluno" : "/dashboard"}
-            className="rounded-full border border-border px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-primary hover:bg-secondary hover:text-primary"
-          >
-            {mode === "admin" ? "Portal aluno" : "Painel admin"}
-          </Link>
           {isAuthenticated ? (
             <>
               <button

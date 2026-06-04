@@ -8,7 +8,7 @@ import { useSyncExternalStore } from "react";
  * createExercise/deleteExercise.
  */
 
-const STORAGE_KEY = "rfp:exercises";
+const STORAGE_KEY = "rfp:exercises:v2";
 
 export type MockExercise = {
   id: string;
@@ -19,14 +19,7 @@ export type MockExercise = {
   createdAt: string;
 };
 
-const SEED: MockExercise[] = [
-  { id: "x1", name: "Agachamento Livre", muscleGroup: "Inferiores", description: "Core ativado, calcanhares firmes, descida controlada.", videoUrl: "https://www.youtube.com/watch?v=3Y2U3Agkvbs", createdAt: "2026-04-01T10:00:00.000Z" },
-  { id: "x2", name: "Leg Press 45º", muscleGroup: "Inferiores", description: "Amplitude máxima sem tirar a lombar do encosto.", videoUrl: "https://www.youtube.com/watch?v=waAxlYvtCcI", createdAt: "2026-04-02T10:00:00.000Z" },
-  { id: "x3", name: "Stiff", muscleGroup: "Posterior", description: "Quadril para trás, lombar neutra.", videoUrl: "https://www.youtube.com/watch?v=vXPbKrYIEaQ", createdAt: "2026-04-03T10:00:00.000Z" },
-  { id: "x4", name: "Supino Reto", muscleGroup: "Peitoral", description: "Escápulas retraídas, controle na descida.", videoUrl: "", createdAt: "2026-04-04T10:00:00.000Z" },
-  { id: "x5", name: "Pulley Frente", muscleGroup: "Costas", description: "Puxe com os cotovelos, não com as mãos.", videoUrl: "", createdAt: "2026-04-05T10:00:00.000Z" },
-  { id: "x6", name: "Desenvolvimento", muscleGroup: "Ombros", description: "Sem hiperestender a lombar.", videoUrl: "", createdAt: "2026-04-06T10:00:00.000Z" },
-];
+const SEED: MockExercise[] = [];
 
 const listeners = new Set<() => void>();
 let cache: MockExercise[] | null = null;

@@ -11,7 +11,7 @@ import { useSyncExternalStore } from "react";
  * dos hooks pode permanecer igual.
  */
 
-const STORAGE_KEY = "rfp:appointments";
+const STORAGE_KEY = "rfp:appointments:v2";
 
 export type Modality = "presencial" | "online";
 export type ApptStatus = "confirmed" | "pending";
@@ -41,13 +41,7 @@ export const WEEK_DAYS = [
 /** Dia "hoje" no mock (segunda, 27 mai). Usado pelo Dashboard. */
 export const TODAY_INDEX = 1;
 
-const SEED: Appointment[] = [
-  { id: "a1", dayIndex: 1, time: "07:30", student: "Beatriz Santos", location: "Unidade Jardins", modality: "presencial", status: "confirmed" },
-  { id: "a2", dayIndex: 1, time: "15:00", student: "Rodrigo Silva", location: "Unidade Pinheiros", modality: "presencial", status: "confirmed" },
-  { id: "a3", dayIndex: 2, time: "18:00", student: "Lucas Oliveira", location: "Unidade Jardins", modality: "presencial", status: "confirmed" },
-  { id: "a4", dayIndex: 4, time: "08:00", student: "Pedro Henrique", location: "Unidade Jardins", modality: "presencial", status: "pending" },
-  { id: "a5", dayIndex: 4, time: "19:30", student: "Ana Costa", location: "Via Zoom", modality: "online", status: "pending" },
-];
+const SEED: Appointment[] = [];
 
 const listeners = new Set<() => void>();
 let cache: Appointment[] | null = null;

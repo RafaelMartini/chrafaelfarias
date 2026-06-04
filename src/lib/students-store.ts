@@ -9,7 +9,7 @@ import { students as seedStudents } from "@/lib/mock-data";
  * read()/write() por listMyStudents/createStudent.
  */
 
-const STORAGE_KEY = "rfp:students";
+const STORAGE_KEY = "rfp:students:v2";
 
 export type MockStudent = {
   id: string;

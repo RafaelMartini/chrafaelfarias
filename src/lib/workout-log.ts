@@ -12,7 +12,7 @@ import { useSyncExternalStore } from "react";
  * `useWorkoutLog` pode permanecer igual.
  */
 
-const STORAGE_KEY = "rfp:workout-log";
+const STORAGE_KEY = "rfp:workout-log:v2";
 
 export type WorkoutLogEntry = {
   /** id do treino concluído (DayWorkout.id no mock; workout_id no banco) */
