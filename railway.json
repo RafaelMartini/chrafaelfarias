@@ -2,7 +2,7 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "NITRO_PRESET=node-server npm run build"
+    "buildCommand": "rm -rf node_modules/.cache dist .nitro .tanstack && NITRO_PRESET=node-server npm run build"
   },
   "deploy": {
     "startCommand": "node dist/server/index.mjs",
