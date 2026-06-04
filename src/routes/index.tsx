@@ -105,7 +105,7 @@ function Landing() {
           <div className="rounded-3xl border border-border bg-card/70 p-10 shadow-2xl backdrop-blur-xl md:p-16">
             <p className="mb-4 text-xs font-mono uppercase tracking-[0.3em] text-primary">Pronto para começar?</p>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
-              Comece agora sua jornada de performance.
+              Vou te ajudar a chegar na sua melhor versão
             </h2>
             <div className="mt-8 flex flex-wrap gap-3 justify-center">
               <Link
