@@ -37,8 +37,9 @@ function Landing() {
       <div className="pointer-events-none absolute left-1/2 top-20 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
 
       <header className="relative z-10 mx-auto mt-3 flex w-[calc(100%-1.5rem)] max-w-7xl items-center justify-between rounded-3xl border border-border bg-card/70 px-4 py-3 shadow-2xl backdrop-blur-xl sm:px-6">
-        <Link to="/" className="flex items-center">
+        <Link to="/" className="flex flex-col items-start">
           <img src={logo} alt="Coach Rafael Faria" className="h-20 w-auto sm:h-24 lg:h-28" />
+          <span className="mt-0.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">CREF 146790-G/SP</span>
         </Link>
         <div className="flex items-center gap-3">
           <Link

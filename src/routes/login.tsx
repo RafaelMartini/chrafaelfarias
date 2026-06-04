@@ -57,8 +57,9 @@ function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-transparent px-6 py-12">
       <div className="w-full max-w-md rounded-3xl border border-border bg-card/75 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
-        <Link to="/" className="inline-block">
+        <Link to="/" className="inline-flex flex-col items-start">
           <img src={logo} alt="Coach Rafael Faria" className="h-24 w-auto sm:h-28" />
+          <span className="mt-0.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">CREF 146790-G/SP</span>
         </Link>
         <h1 className="mt-10 text-4xl font-extrabold uppercase tracking-tight">Entrar</h1>
         <p className="mt-2 text-sm text-muted-foreground font-mono uppercase">Acesse seu painel de performance</p>

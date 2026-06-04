@@ -35,8 +35,9 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
     <div className="min-h-screen bg-transparent">
       <nav className="sticky top-0 z-50 mx-auto mt-3 flex w-[calc(100%-1.5rem)] max-w-7xl items-center justify-between rounded-3xl border border-border bg-card/75 px-4 py-3 shadow-2xl backdrop-blur-xl sm:px-6">
         <div className="flex items-center gap-5 lg:gap-8">
-          <Link to={mode === "admin" ? "/dashboard" : "/aluno"} className="flex items-center">
+          <Link to={mode === "admin" ? "/dashboard" : "/aluno"} className="flex flex-col items-start">
             <img src={logo} alt="Coach Rafael Faria" className="h-20 w-auto sm:h-24 lg:h-28" />
+            <span className="mt-0.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">CREF 146790-G/SP</span>
           </Link>
           <div className="hidden md:flex gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             {nav.map((item) => {
