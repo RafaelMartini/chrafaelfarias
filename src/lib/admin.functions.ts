@@ -72,6 +72,37 @@ export const createStudent = createServerFn({ method: "POST" })
     return { ok: true, user_id: newUserId };
   });
 
+export const resetStudentPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        studentId: z.string().uuid(),
+        password: z.string().min(6).max(72),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    await assertTrainer(userId);
+
+    // Garante que o aluno pertence a este treinador.
+    const { data: student, error: sErr } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id")
+      .eq("user_id", data.studentId)
+      .eq("trainer_id", userId)
+      .maybeSingle();
+    if (sErr) throw new Error(sErr.message);
+    if (!student) throw new Error("Aluno não encontrado");
+
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.studentId, {
+      password: data.password,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // ============ EXERCISES ============
 
 export const listMyExercises = createServerFn({ method: "GET" })
@@ -138,14 +169,18 @@ export const getStudentWithWorkouts = createServerFn({ method: "POST" })
     const { userId } = context;
     await assertTrainer(userId);
 
-    const { data: student, error: sErr } = await supabaseAdmin
+    const { data: profile, error: sErr } = await supabaseAdmin
       .from("profiles")
       .select("id, user_id, display_name, phone, goal")
       .eq("user_id", data.studentId)
       .eq("trainer_id", userId)
       .maybeSingle();
     if (sErr) throw new Error(sErr.message);
-    if (!student) throw new Error("Aluno não encontrado");
+    if (!profile) throw new Error("Aluno não encontrado");
+
+    // E-mail de login (fica em auth.users, não em profiles).
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(data.studentId);
+    const student = { ...profile, email: authUser?.user?.email ?? null };
 
     const { data: workouts, error: wErr } = await supabaseAdmin
       .from("workouts")
@@ -288,6 +323,177 @@ export const removeExerciseFromWorkout = createServerFn({ method: "POST" })
     const trainerId = (row as { workout?: { trainer_id?: string } } | null)?.workout?.trainer_id;
     if (!row || trainerId !== userId) throw new Error("Não autorizado");
     const { error } = await supabaseAdmin.from("workout_exercises").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ============ AGENDA / DISPONIBILIDADE ============
+
+type SlotRow = {
+  id: string;
+  starts_at: string;
+  duration_minutes: number;
+  location: string | null;
+  modality: string;
+  booked_by: string | null;
+};
+
+async function assertOwnsStudent(trainerId: string, studentId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("user_id")
+    .eq("user_id", studentId)
+    .eq("trainer_id", trainerId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Aluno não encontrado");
+}
+
+export const createSlot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        startsAt: z.string().min(1),
+        durationMinutes: z.number().int().min(15).max(480),
+        location: z.string().trim().max(120).optional().or(z.literal("")),
+        modality: z.enum(["presencial", "online"]),
+        studentId: z.string().uuid().optional().or(z.literal("")),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    await assertTrainer(userId);
+    const studentId = data.studentId || null;
+    if (studentId) await assertOwnsStudent(userId, studentId);
+    const { error } = await supabaseAdmin.from("availability_slots").insert({
+      trainer_id: userId,
+      starts_at: data.startsAt,
+      duration_minutes: data.durationMinutes,
+      location: data.location || null,
+      modality: data.modality,
+      booked_by: studentId,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// Admin atribui/desatribui um aluno a um horário existente.
+export const assignSlot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        studentId: z.string().uuid().nullable(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    await assertTrainer(userId);
+    if (data.studentId) await assertOwnsStudent(userId, data.studentId);
+    const { error } = await supabaseAdmin
+      .from("availability_slots")
+      .update({ booked_by: data.studentId })
+      .eq("id", data.id)
+      .eq("trainer_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const listMySlots = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context;
+    await assertTrainer(userId);
+    const { data: slots, error } = await supabaseAdmin
+      .from("availability_slots")
+      .select("id, starts_at, duration_minutes, location, modality, booked_by")
+      .eq("trainer_id", userId)
+      .order("starts_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    const list = (slots ?? []) as SlotRow[];
+    const ids = [...new Set(list.map((s) => s.booked_by).filter(Boolean))] as string[];
+    let names: Record<string, string> = {};
+    if (ids.length) {
+      const { data: profs } = await supabaseAdmin
+        .from("profiles")
+        .select("user_id, display_name")
+        .in("user_id", ids);
+      names = Object.fromEntries((profs ?? []).map((p) => [p.user_id, p.display_name ?? "Aluno"]));
+    }
+    return list.map((s) => ({ ...s, student_name: s.booked_by ? names[s.booked_by] ?? "Aluno" : null }));
+  });
+
+export const deleteSlot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    await assertTrainer(userId);
+    const { error } = await supabaseAdmin
+      .from("availability_slots")
+      .delete()
+      .eq("id", data.id)
+      .eq("trainer_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ---- Lado do aluno ----
+
+export const listStudentSlots = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context;
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("trainer_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const trainerId = (prof as { trainer_id: string | null } | null)?.trainer_id;
+    if (!trainerId) return [];
+    const { data: slots, error } = await supabaseAdmin
+      .from("availability_slots")
+      .select("id, starts_at, duration_minutes, location, modality, booked_by")
+      .eq("trainer_id", trainerId)
+      .order("starts_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    return ((slots ?? []) as SlotRow[])
+      .filter((s) => !s.booked_by || s.booked_by === userId)
+      .map((s) => ({ ...s, mine: s.booked_by === userId }));
+  });
+
+export const bookSlot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    // Atômico: só agenda se ainda estiver aberto (booked_by IS NULL).
+    const { data: row, error } = await supabaseAdmin
+      .from("availability_slots")
+      .update({ booked_by: userId })
+      .eq("id", data.id)
+      .is("booked_by", null)
+      .select("id")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) throw new Error("Esse horário já foi agendado.");
+    return { ok: true };
+  });
+
+export const cancelBooking = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { error } = await supabaseAdmin
+      .from("availability_slots")
+      .update({ booked_by: null })
+      .eq("id", data.id)
+      .eq("booked_by", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

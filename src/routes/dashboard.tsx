@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Shell, MetricCard } from "@/components/Shell";
-import { useStudents, type MockStudent } from "@/lib/students-store";
-import { useAppointments, dayLabel, TODAY_INDEX } from "@/lib/appointments-store";
+import { useRequireTrainer } from "@/hooks/use-require-role";
+import { listMyStudents, listMyExercises } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -14,147 +15,81 @@ export const Route = createFileRoute("/dashboard")({
   component: AdminDashboard,
 });
 
-type StatusFilter = "all" | MockStudent["status"];
-const FILTERS: { key: StatusFilter; label: string }[] = [
-  { key: "all", label: "Todos" },
-  { key: "active", label: "Ativos" },
-  { key: "missed", label: "Faltaram" },
-  { key: "new", label: "Novos" },
-];
+type Student = { id: string; user_id: string; display_name: string | null; goal: string | null };
+
+function initials(name: string): string {
+  return name.split(" ").map((p) => p[0]).filter(Boolean).join("").slice(0, 2).toUpperCase() || "AL";
+}
 
 function AdminDashboard() {
-  const { appointments, byDay } = useAppointments();
-  const { students } = useStudents();
-  const [filter, setFilter] = useState<StatusFilter>("all");
+  const { user, role } = useRequireTrainer();
+  const listStudents = useServerFn(listMyStudents);
+  const listExercises = useServerFn(listMyExercises);
+  const enabled = !!user && role === "trainer";
 
-  // Métricas derivadas dos dados (antes eram fixas).
-  const metrics = useMemo(() => {
-    const total = students.length || 1;
-    const active = students.filter((s) => s.status === "active").length;
-    const avgCompliance = Math.round(students.reduce((acc, s) => acc + s.compliance, 0) / total);
-    const onTrack = students.filter((s) => s.compliance >= 85).length;
-    const completionRate = Math.round((onTrack / total) * 100);
-    return { total: students.length, active, avgCompliance, completionRate };
-  }, [students]);
-
-  const filtered = useMemo(
-    () => (filter === "all" ? students : students.filter((s) => s.status === filter)),
-    [students, filter],
-  );
-
-  const nextAppt = appointments[0];
-  const todayAppts = byDay(TODAY_INDEX);
+  const { data: students = [] } = useQuery({
+    queryKey: ["my-students"],
+    queryFn: () => listStudents() as Promise<Student[]>,
+    enabled,
+  });
+  const { data: exercises = [] } = useQuery({
+    queryKey: ["my-exercises"],
+    queryFn: () => listExercises() as Promise<unknown[]>,
+    enabled,
+  });
 
   return (
     <Shell mode="admin">
       <section className="space-y-8 animate-reveal">
-        <div className="flex items-end justify-between flex-wrap gap-4">
-          <div>
-            <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Admin Performance</p>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight uppercase">Visão Geral do Ecossistema</h1>
-          </div>
-          <div className="text-right hidden sm:block">
-            <p className="text-xs font-mono text-muted-foreground">SEG, 27 MAIO 2026</p>
-            <p className="text-xl font-extrabold">14:32</p>
-          </div>
+        <div>
+          <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Admin Performance</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight uppercase">Visão Geral</h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <MetricCard label="Alunos Ativos" value={metrics.active} hint={`${metrics.total} no total`} />
-          <MetricCard label="Frequência Média" value={metrics.avgCompliance} suffix="%" hint="adesão dos alunos" />
-          <MetricCard label="Em Dia" value={metrics.completionRate} suffix="%" hint="adesão acima de 85%" />
-          <div className="rounded-3xl border border-primary/40 bg-primary/10 p-6 shadow-2xl backdrop-blur-xl">
-            <p className="text-xs font-mono uppercase text-primary mb-4">Próxima Sessão</p>
-            {nextAppt ? (
-              <>
-                <div className="text-xl font-extrabold uppercase leading-none">{nextAppt.time} — {nextAppt.student.split(" ")[0]}</div>
-                <p className="text-sm mt-2 text-foreground/80">{dayLabel(nextAppt.dayIndex)} • {nextAppt.location}</p>
-              </>
-            ) : (
-              <p className="text-sm text-foreground/80">Nenhuma sessão agendada.</p>
-            )}
-            <Link to="/agenda" className="mt-4 inline-block rounded-full bg-primary px-4 py-2 text-[10px] font-mono font-bold uppercase text-primary-foreground">Ver Agenda</Link>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <MetricCard label="Alunos" value={students.length} hint="vinculados a você" highlight />
+          <MetricCard label="Exercícios na Biblioteca" value={exercises.length} hint="disponíveis para montar treinos" />
+          <div className="rounded-3xl border border-primary/40 bg-primary/10 p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between">
+            <p className="text-xs font-mono uppercase text-primary mb-4">Ações rápidas</p>
+            <div className="flex flex-wrap gap-2">
+              <Link to="/alunos" className="rounded-full bg-primary px-4 py-2 text-[10px] font-mono font-bold uppercase text-primary-foreground">+ Aluno</Link>
+              <Link to="/biblioteca" className="rounded-full border border-border px-4 py-2 text-[10px] font-mono font-bold uppercase hover:border-primary hover:text-primary">+ Exercício</Link>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8 animate-reveal [animation-delay:150ms]">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <h2 className="text-2xl font-extrabold uppercase tracking-tighter">Roster de Alunos</h2>
-            <Link to="/alunos" className="rounded-full border border-border px-4 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-primary hover:bg-secondary hover:text-primary">
-              Ver todos →
-            </Link>
-          </div>
-
-          <div className="flex gap-2 flex-wrap">
-            {FILTERS.map((f) => {
-              const count = f.key === "all" ? students.length : students.filter((s) => s.status === f.key).length;
-              return (
-                <button
-                  key={f.key}
-                  onClick={() => setFilter(f.key)}
-                  className={`rounded-full border px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest transition-colors ${
-                    filter === f.key
-                      ? "border-primary bg-primary text-primary-foreground font-bold"
-                      : "border-border text-muted-foreground hover:border-primary hover:bg-secondary hover:text-foreground"
-                  }`}
-                >
-                  {f.label} ({count})
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="space-y-2">
-            {filtered.length === 0 && (
-              <p className="rounded-3xl border border-dashed border-border p-8 text-center text-xs font-mono uppercase text-muted-foreground">Nenhum aluno neste filtro.</p>
-            )}
-            {filtered.map((s) => (
-              <div key={s.id} className="group flex items-center justify-between rounded-3xl border border-border bg-card/75 p-4 shadow-xl backdrop-blur-xl transition-all hover:-translate-y-1 hover:border-primary/40">
-                <div className="flex items-center gap-4">
-                  <div className="flex size-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10 font-mono text-xs text-primary">{s.initials}</div>
-                  <div>
-                    <p className="font-bold uppercase tracking-tight">{s.name}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{s.plan} • {s.week}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-6">
-                  <div className="text-right">
-                    <p className="text-[9px] font-mono text-muted-foreground uppercase">Adesão</p>
-                    <p className={`text-sm font-extrabold ${s.compliance > 85 ? "text-primary" : s.compliance > 70 ? "text-foreground" : "text-destructive"}`}>{s.compliance}%</p>
-                  </div>
-                  <span className={`rounded-full px-3 py-1 text-[10px] font-mono uppercase ${s.status === "active" ? "text-primary bg-primary/10" : s.status === "missed" ? "text-destructive bg-destructive/10" : "text-foreground bg-secondary"}`}>
-                    {s.status === "active" ? "ativo" : s.status === "missed" ? "faltou" : "novo"}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+      <section className="mt-16 animate-reveal [animation-delay:150ms]">
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+          <h2 className="text-2xl font-extrabold uppercase tracking-tighter">Meus Alunos</h2>
+          <Link to="/alunos" className="rounded-full border border-border px-4 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-primary hover:bg-secondary hover:text-primary">
+            Ver todos →
+          </Link>
         </div>
 
-        <div className="space-y-6">
-          <h2 className="text-2xl font-extrabold uppercase tracking-tighter">Agenda Hoje</h2>
-          <div className="space-y-5 rounded-3xl border border-border bg-card/75 p-6 shadow-2xl backdrop-blur-xl">
-            {todayAppts.length === 0 && (
-              <p className="text-xs font-mono uppercase text-muted-foreground">Sem sessões para hoje.</p>
-            )}
-            {todayAppts.map((a) => (
-              <div key={a.id} className="flex gap-4">
-                <div className="flex flex-col items-center bg-background border border-border w-14 py-2 shrink-0 rounded-2xl">
-                  <span className="text-[10px] font-mono text-muted-foreground uppercase">{a.time.split(":")[0]}h</span>
-                  <span className="text-lg font-extrabold">{a.time.split(":")[1]}</span>
-                </div>
+        <div className="space-y-2">
+          {students.length === 0 && (
+            <p className="rounded-3xl border border-dashed border-border p-8 text-center text-xs font-mono uppercase text-muted-foreground">
+              Nenhum aluno ainda. Cadastre em <Link to="/alunos" className="text-primary hover:underline">Alunos</Link>.
+            </p>
+          )}
+          {students.map((s) => (
+            <Link
+              key={s.id}
+              to="/alunos/$studentId"
+              params={{ studentId: s.user_id }}
+              className="group flex items-center justify-between rounded-3xl border border-border bg-card/75 p-4 shadow-xl backdrop-blur-xl transition-all hover:-translate-y-1 hover:border-primary/40"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex size-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10 font-mono text-xs text-primary">{initials(s.display_name ?? "")}</div>
                 <div>
-                  <p className="text-sm font-bold uppercase">{a.student}</p>
-                  <p className="text-xs text-muted-foreground font-mono">{a.location}</p>
-                  <span className={`inline-block mt-1 text-[9px] font-mono uppercase ${a.modality === "presencial" ? "text-primary" : "text-foreground"}`}>
-                    {a.modality} • {a.status === "confirmed" ? "confirmado" : "pendente"}
-                  </span>
+                  <p className="font-bold uppercase tracking-tight">{s.display_name ?? "—"}</p>
+                  {s.goal && <p className="text-xs text-muted-foreground font-mono">{s.goal}</p>}
                 </div>
               </div>
-            ))}
-          </div>
+              <span className="text-[10px] font-mono uppercase text-primary group-hover:underline">Montar treino →</span>
+            </Link>
+          ))}
         </div>
       </section>
     </Shell>

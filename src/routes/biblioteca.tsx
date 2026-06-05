@@ -177,6 +177,7 @@ function NewExerciseModal({ onClose }: { onClose: () => void }) {
   const create = useServerFn(createExercise);
   const [form, setForm] = useState({ name: "", muscle_group: "", description: "", video_url: "" });
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const embed = embedUrl(form.video_url);
 
@@ -197,16 +198,37 @@ function NewExerciseModal({ onClose }: { onClose: () => void }) {
       return;
     }
     setUploading(true);
+    setProgress(0);
     try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
+      const APIKEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
       const ext = file.name.split(".").pop() || "mp4";
       const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("exercise-videos").upload(path, file, {
-        contentType: file.type,
-        upsert: false,
+
+      // XHR direto no Storage pra ter evento de progresso (o supabase.upload não expõe %).
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${SUPA_URL}/storage/v1/object/exercise-videos/${path}`);
+        xhr.setRequestHeader("authorization", `Bearer ${token}`);
+        xhr.setRequestHeader("apikey", APIKEY);
+        xhr.setRequestHeader("x-upsert", "false");
+        xhr.setRequestHeader("content-type", file.type);
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
+        };
+        xhr.onload = () =>
+          xhr.status >= 200 && xhr.status < 300
+            ? resolve()
+            : reject(new Error(`Upload falhou (${xhr.status})`));
+        xhr.onerror = () => reject(new Error("Erro de rede no upload"));
+        xhr.send(file);
       });
-      if (error) throw error;
+
       const { data } = supabase.storage.from("exercise-videos").getPublicUrl(path);
       setForm((f) => ({ ...f, video_url: data.publicUrl }));
+      setProgress(100);
       toast.success("Vídeo enviado");
     } catch (e) {
       toast.error("Falha no upload", { description: (e as Error).message });
@@ -236,14 +258,28 @@ function NewExerciseModal({ onClose }: { onClose: () => void }) {
               disabled={uploading}
               className="mt-1 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border py-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
             >
-              {uploading ? <><Loader2 className="size-3.5 animate-spin" /> Enviando…</> : <><Upload className="size-3.5" /> Enviar arquivo de vídeo</>}
+              {uploading ? <><Loader2 className="size-3.5 animate-spin" /> Enviando… {progress}%</> : <><Upload className="size-3.5" /> Enviar arquivo de vídeo</>}
             </button>
+            {uploading && (
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border">
+                <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+              </div>
+            )}
           </div>
           <Field label="…ou cole uma URL (YouTube/Vimeo)" value={form.video_url} onChange={(v) => setForm({ ...form, video_url: v })} placeholder="https://youtube.com/watch?v=..." />
           {form.video_url && (
-            <p className="flex items-center gap-1.5 text-[10px] font-mono uppercase text-primary">
-              <Film className="size-3" /> {embed ? "vídeo válido (embed)" : "vídeo definido"}
-            </p>
+            <div className="space-y-2">
+              <p className="flex items-center gap-1.5 text-[10px] font-mono uppercase text-primary">
+                <Film className="size-3" /> {embed ? "vídeo válido (embed)" : "vídeo enviado — preview:"}
+              </p>
+              <div className="overflow-hidden rounded-md border border-border bg-black aspect-video">
+                {embed ? (
+                  <iframe src={embed} title="preview" className="h-full w-full" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+                ) : (
+                  <video src={form.video_url} controls className="h-full w-full" />
+                )}
+              </div>
+            </div>
           )}
 
           <div>

@@ -1,3 +1,11 @@
+// Polyfill de WebSocket para Node < 22 (sem WebSocket nativo). O supabase-js
+// instancia o Realtime ao criar o client e quebra sem WebSocket. Em Node 22+/24
+// (produção) isto é no-op. Mantém o cadastro funcionando em qualquer versão.
+import ws from "ws";
+if (typeof (globalThis as { WebSocket?: unknown }).WebSocket === "undefined") {
+  (globalThis as { WebSocket?: unknown }).WebSocket = ws as unknown;
+}
+
 import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";

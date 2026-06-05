@@ -1,233 +1,166 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Shell } from "@/components/Shell";
-import { MapPin, Video, CheckCircle2, Clock, Filter, X } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { useStudentBookings, slotKey } from "@/lib/student-bookings";
+import { ChevronLeft, ChevronRight, MapPin, Video, Check } from "lucide-react";
+import { Shell } from "@/components/Shell";
+import { useAuth } from "@/hooks/use-auth";
+import { listStudentSlots, bookSlot, cancelBooking } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/aluno/agenda")({
   head: () => ({ meta: [{ title: "Minha Agenda — Rafael Faria" }] }),
   component: StudentAgenda,
 });
 
-type SlotStatus = "disponivel" | "ocupado" | "reservado";
-type SlotTime = { time: string; location: string; type: "presencial" | "online"; status: SlotStatus };
-type DaySlots = { date: string; day: string; times: SlotTime[] };
+type Slot = {
+  id: string;
+  starts_at: string;
+  duration_minutes: number;
+  location: string | null;
+  modality: string;
+  mine: boolean;
+};
 
-const slots: DaySlots[] = [
-  { date: "MAI 28", day: "Quarta", times: [
-    { time: "07:00", location: "Jardins", type: "presencial", status: "disponivel" },
-    { time: "09:00", location: "Jardins", type: "presencial", status: "ocupado" },
-    { time: "18:00", location: "Online", type: "online", status: "disponivel" },
-  ]},
-  { date: "MAI 29", day: "Quinta", times: [
-    { time: "08:00", location: "Pinheiros", type: "presencial", status: "disponivel" },
-    { time: "12:00", location: "Online", type: "online", status: "disponivel" },
-    { time: "19:30", location: "Online", type: "online", status: "disponivel" },
-  ]},
-  { date: "MAI 30", day: "Sexta", times: [
-    { time: "07:00", location: "Jardins", type: "presencial", status: "disponivel" },
-    { time: "10:00", location: "Jardins", type: "presencial", status: "reservado" },
-    { time: "17:00", location: "Pinheiros", type: "presencial", status: "ocupado" },
-  ]},
-  { date: "JUN 02", day: "Segunda", times: [
-    { time: "07:30", location: "Jardins", type: "presencial", status: "disponivel" },
-    { time: "15:00", location: "Pinheiros", type: "presencial", status: "disponivel" },
-    { time: "20:00", location: "Online", type: "online", status: "ocupado" },
-  ]},
-  { date: "JUN 03", day: "Terça", times: [
-    { time: "06:30", location: "Jardins", type: "presencial", status: "disponivel" },
-    { time: "18:30", location: "Pinheiros", type: "presencial", status: "disponivel" },
-  ]},
-  { date: "JUN 05", day: "Quinta", times: [
-    { time: "08:00", location: "Online", type: "online", status: "disponivel" },
-    { time: "19:00", location: "Jardins", type: "presencial", status: "disponivel" },
-  ]},
-];
+const DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
-const filterOptions = ["todos", "presencial", "online"] as const;
+function startOfWeek(offsetWeeks: number): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  const dow = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - dow + offsetWeeks * 7);
+  return d;
+}
+function addDays(d: Date, n: number): Date {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+}
+function fmtTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+function sameDay(iso: string, d: Date): boolean {
+  const a = new Date(iso);
+  return a.getFullYear() === d.getFullYear() && a.getMonth() === d.getMonth() && a.getDate() === d.getDate();
+}
 
 function StudentAgenda() {
-  const [filter, setFilter] = useState<(typeof filterOptions)[number]>("todos");
-  const { isBooked, toggle } = useStudentBookings();
+  const { user } = useAuth();
+  const list = useServerFn(listStudentSlots);
+  const book = useServerFn(bookSlot);
+  const cancel = useServerFn(cancelBooking);
+  const qc = useQueryClient();
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [sel, setSel] = useState<Slot | null>(null);
 
-  const filteredSlots = slots
-    .map((s) => ({ ...s, times: filter === "todos" ? s.times : s.times.filter((t) => t.type === filter) }))
-    .filter((s) => s.times.length > 0);
+  const { data: slots = [] } = useQuery({ queryKey: ["student-slots", user?.id], queryFn: () => list() as Promise<Slot[]>, enabled: !!user });
 
-  // Confirmados = reservados pelo personal (seed) + reservas do aluno (cancelável).
-  const confirmados = slots.flatMap((s) =>
-    s.times
-      .filter((t) => t.status === "reservado" || isBooked(slotKey(s.date, t.time)))
-      .map((t) => ({
-        date: s.date,
-        day: s.day,
-        time: t.time,
-        location: t.location,
-        type: t.type,
-        cancelable: isBooked(slotKey(s.date, t.time)),
-      })),
-  );
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["student-slots"] });
+  const bookMut = useMutation({
+    mutationFn: (id: string) => book({ data: { id } }),
+    onSuccess: () => { invalidate(); toast.success("Aula agendada!"); setSel(null); },
+    onError: (e: Error) => { invalidate(); toast.error("Não foi possível agendar", { description: e.message }); setSel(null); },
+  });
+  const cancelMut = useMutation({
+    mutationFn: (id: string) => cancel({ data: { id } }),
+    onSuccess: () => { invalidate(); toast("Agendamento cancelado"); setSel(null); },
+    onError: (e: Error) => toast.error("Erro ao cancelar", { description: e.message }),
+  });
 
-  const livresCount = slots.reduce((acc, s) => acc + s.times.filter((t) => t.status === "disponivel").length, 0);
-
-  const handleBook = (date: string, day: string, time: string, location: string) => {
-    const nowBooked = toggle(slotKey(date, time));
-    if (nowBooked) toast.success("Horário reservado!", { description: `${day} às ${time} — ${location}` });
-    else toast("Reserva cancelada", { description: `${day} às ${time}` });
-  };
+  const weekStart = useMemo(() => startOfWeek(weekOffset), [weekOffset]);
+  const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
+  const weekEnd = addDays(weekStart, 6);
 
   return (
     <Shell mode="student">
-      <div className="mb-6 sm:mb-8 animate-reveal">
-        <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Agendamentos</p>
-        <h1 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Horários Disponíveis</h1>
-        <p className="text-muted-foreground mt-3 max-w-xl text-sm sm:text-base">
-          Escolha modalidade, unidade e horário com o seu personal. Horários em verde estão livres.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2 text-[10px] font-mono uppercase">
-          <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">{livresCount} horários livres</span>
-          <span className="rounded-full bg-secondary px-3 py-1 text-foreground">{confirmados.length} confirmado(s)</span>
+      <div className="flex items-end justify-between mb-6 animate-reveal flex-wrap gap-4">
+        <div>
+          <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Agendamentos</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Minha Agenda</h1>
+          <p className="mt-2 text-xs font-mono text-muted-foreground">Toque num horário livre para agendar. Suas aulas aparecem em destaque.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setWeekOffset((w) => w - 1)} className="grid size-9 place-items-center rounded-full border border-border hover:border-primary hover:text-primary"><ChevronLeft className="size-4" /></button>
+          <div className="text-center min-w-40">
+            <p className="text-xs font-mono uppercase text-muted-foreground">
+              {weekStart.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} – {weekEnd.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+            </p>
+            {weekOffset !== 0 && <button onClick={() => setWeekOffset(0)} className="text-[10px] font-mono uppercase text-primary hover:underline">hoje</button>}
+          </div>
+          <button onClick={() => setWeekOffset((w) => w + 1)} className="grid size-9 place-items-center rounded-full border border-border hover:border-primary hover:text-primary"><ChevronRight className="size-4" /></button>
         </div>
       </div>
 
-      {/* Filtros */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-8 animate-reveal [animation-delay:100ms]">
-        <div className="flex items-center gap-2 text-[10px] font-mono uppercase text-muted-foreground">
-          <Filter className="size-3" />
-          <span>Filtrar:</span>
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-1 -mb-1">
-          {filterOptions.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`shrink-0 px-4 py-2 text-[10px] font-mono uppercase tracking-widest border rounded-full transition-colors ${
-                filter === f
-                  ? "bg-primary text-primary-foreground border-primary font-bold"
-                  : "border-border hover:border-primary hover:bg-secondary hover:text-primary"
-              }`}
-            >
-              {f === "todos" ? "Todos" : f === "presencial" ? "Presencial" : "Online"}
-            </button>
-          ))}
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 animate-reveal [animation-delay:100ms]">
+        {days.map((day, i) => {
+          const daySlots = slots.filter((s) => sameDay(s.starts_at, day)).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+          const today = sameDay(new Date().toISOString(), day);
+          return (
+            <div key={i} className={`rounded-2xl border bg-card/60 p-3 min-h-44 ${today ? "border-primary/50" : "border-border"}`}>
+              <div className="mb-2">
+                <p className="text-[10px] font-mono uppercase text-muted-foreground">{DAYS[i]}</p>
+                <p className={`text-lg font-extrabold tabular-nums ${today ? "text-primary" : ""}`}>{day.getDate()}</p>
+              </div>
+              <div className="space-y-1.5">
+                {daySlots.length === 0 && <p className="text-[9px] font-mono uppercase text-muted-foreground/50">—</p>}
+                {daySlots.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setSel(s)}
+                    className={`w-full text-left rounded-lg border px-2 py-1.5 transition-colors ${
+                      s.mine
+                        ? "border-primary bg-primary/15 hover:bg-primary/25"
+                        : "border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20"
+                    }`}
+                  >
+                    <p className="text-[11px] font-extrabold tabular-nums leading-tight flex items-center gap-1">
+                      {s.mine && <Check className="size-2.5 text-primary" strokeWidth={3} />}
+                      {fmtTime(s.starts_at)}
+                    </p>
+                    <p className={`text-[9px] font-mono uppercase leading-tight ${s.mine ? "text-primary" : "text-emerald-500"}`}>{s.mine ? "Minha aula" : "Livre"}</p>
+                    <p className="flex items-center gap-1 text-[8px] font-mono text-muted-foreground truncate leading-tight">
+                      {s.modality === "online" ? <Video className="size-2.5" /> : <MapPin className="size-2.5" />}
+                      {s.location || (s.modality === "online" ? "Online" : "—")}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Próximos agendamentos confirmados */}
-      <section className="mb-8 animate-reveal [animation-delay:150ms]">
-        <h2 className="text-sm font-extrabold uppercase tracking-widest mb-4 flex items-center gap-2">
-          <CheckCircle2 className="size-4 text-primary" />
-          Confirmados
-        </h2>
-        {confirmados.length === 0 && (
-          <p className="rounded-3xl border border-dashed border-border p-6 text-center text-xs font-mono uppercase text-muted-foreground">
-            Nenhum horário confirmado. Reserve um horário livre abaixo.
-          </p>
-        )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {confirmados.map((a) => (
-            <div key={`${a.date}-${a.time}`} className="flex items-center gap-3 sm:gap-4 rounded-3xl border border-primary/30 bg-primary/10 p-4 shadow-xl backdrop-blur-xl">
-              <div className="flex w-12 shrink-0 flex-col items-center rounded-2xl border border-primary/30 bg-background/50 py-2">
-                <span className="text-[9px] font-mono text-primary uppercase">{a.date.split(" ")[0]}</span>
-                <span className="text-base font-extrabold text-primary">{a.date.split(" ")[1]}</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold uppercase truncate">{a.day} às {a.time}</p>
-                <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground mt-1">
-                  {a.type === "presencial" ? <MapPin className="size-3" /> : <Video className="size-3" />}
-                  <span>{a.location}</span>
-                </div>
-              </div>
-              {a.cancelable ? (
-                <button
-                  onClick={() => handleBook(a.date, a.day, a.time, a.location)}
-                  title="Cancelar reserva"
-                  className="grid size-8 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
-                >
-                  <X className="size-4" strokeWidth={3} />
+      <div className="mt-6 flex flex-wrap gap-4 text-[10px] font-mono uppercase text-muted-foreground">
+        <span className="flex items-center gap-1.5"><span className="size-3 rounded-sm border border-emerald-500/40 bg-emerald-500/10" /> Livre</span>
+        <span className="flex items-center gap-1.5"><span className="size-3 rounded-sm border border-primary bg-primary/15" /> Minha aula</span>
+      </div>
+
+      {sel && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" onClick={() => setSel(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-2xl">
+            <h2 className="text-xl font-extrabold uppercase tracking-tight">{sel.mine ? "Minha aula" : "Agendar horário"}</h2>
+            <p className="mt-2 text-sm font-mono">
+              {new Date(sel.starts_at).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "short" })} · {fmtTime(sel.starts_at)}
+            </p>
+            <p className="mt-1 flex items-center gap-1 text-xs font-mono text-muted-foreground">
+              {sel.modality === "online" ? <Video className="size-3" /> : <MapPin className="size-3" />}
+              {sel.location || (sel.modality === "online" ? "Online" : "Presencial")} · {sel.duration_minutes}min
+            </p>
+            <div className="mt-6 flex gap-2">
+              <button onClick={() => setSel(null)} className="flex-1 rounded-full border border-border py-3 text-[10px] font-mono uppercase tracking-widest hover:bg-secondary">Fechar</button>
+              {sel.mine ? (
+                <button onClick={() => cancelMut.mutate(sel.id)} disabled={cancelMut.isPending} className="flex-1 rounded-full border border-border py-3 text-[10px] font-extrabold uppercase tracking-widest text-destructive hover:bg-secondary disabled:opacity-50">
+                  {cancelMut.isPending ? "..." : "Cancelar aula"}
                 </button>
               ) : (
-                <span className="shrink-0 text-[8px] font-mono uppercase text-primary/70">pelo<br />personal</span>
+                <button onClick={() => bookMut.mutate(sel.id)} disabled={bookMut.isPending} className="flex-1 rounded-full bg-primary py-3 text-[10px] font-extrabold uppercase tracking-widest text-primary-foreground disabled:opacity-50">
+                  {bookMut.isPending ? "..." : "Agendar"}
+                </button>
               )}
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Grade de horários */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-reveal [animation-delay:200ms]">
-        {filteredSlots.map((s) => (
-          <div key={s.date} className="rounded-3xl border border-border bg-card/75 p-5 shadow-2xl backdrop-blur-xl sm:p-6">
-            <div className="flex items-center gap-4 mb-5">
-              <div className="flex flex-col items-center bg-background border border-border w-14 py-2 rounded-2xl shrink-0">
-                <span className="text-[10px] font-mono text-muted-foreground uppercase">{s.date.split(" ")[0]}</span>
-                <span className="text-lg font-extrabold">{s.date.split(" ")[1]}</span>
-              </div>
-              <div>
-                <p className="text-lg font-extrabold uppercase tracking-tight">{s.day}</p>
-                <p className="text-[10px] font-mono text-muted-foreground uppercase">
-                  {s.times.filter((t) => t.status === "disponivel").length} horários livres
-                </p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              {s.times.map((t) => {
-                const booked = t.status === "disponivel" && isBooked(slotKey(s.date, t.time));
-                const effective: SlotStatus =
-                  t.status === "ocupado" ? "ocupado" : t.status === "reservado" || booked ? "reservado" : "disponivel";
-                const statusConfig = {
-                  disponivel: { bg: "hover:bg-primary hover:text-primary-foreground", border: "hover:border-primary", icon: <Clock className="size-3" />, label: "Disponível" },
-                  ocupado: { bg: "opacity-40 cursor-not-allowed", border: "", icon: <span className="size-3 rounded-full bg-destructive/50" />, label: "Ocupado" },
-                  reservado: { bg: "bg-primary/10", border: "border-primary/30", icon: <CheckCircle2 className="size-3 text-primary" />, label: booked ? "Reservado — cancelar" : "Confirmado" },
-                };
-                const config = statusConfig[effective];
-                const clickable = t.status === "disponivel";
-                return (
-                  <button
-                    key={t.time}
-                    disabled={t.status === "ocupado"}
-                    onClick={clickable ? () => handleBook(s.date, s.day, t.time, t.location) : undefined}
-                    aria-pressed={booked}
-                    className={`w-full flex items-center justify-between gap-2 px-4 py-3 border border-border font-mono text-xs uppercase transition-colors rounded-xl ${config.bg} ${config.border}`}
-                  >
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                      {config.icon}
-                      <span className="font-bold">{t.time}</span>
-                      <span className="text-muted-foreground hidden sm:inline">—</span>
-                      <span className="text-muted-foreground truncate">{t.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {t.type === "presencial" ? (
-                        <MapPin className="size-3 text-muted-foreground" />
-                      ) : (
-                        <Video className="size-3 text-muted-foreground" />
-                      )}
-                      <span className="text-[9px] uppercase hidden sm:inline">{config.label}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
           </div>
-        ))}
-      </div>
-
-      {/* Legenda */}
-      <div className="mt-6 flex flex-wrap gap-4 text-[10px] font-mono uppercase text-muted-foreground animate-reveal [animation-delay:300ms]">
-        <div className="flex items-center gap-1.5">
-          <Clock className="size-3" />
-          <span>Disponível</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="size-3 text-primary" />
-          <span>Confirmado</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="size-3 rounded-full bg-destructive/50" />
-          <span>Ocupado</span>
-        </div>
-      </div>
+      )}
     </Shell>
   );
 }

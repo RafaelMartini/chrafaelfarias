@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Shell } from "@/components/Shell";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useRequireTrainer } from "@/hooks/use-require-role";
+import { KeyRound, Copy, RefreshCw } from "lucide-react";
 import {
   getStudentWithWorkouts,
   createWorkout,
@@ -13,6 +14,7 @@ import {
   addExerciseToWorkout,
   removeExerciseFromWorkout,
   listMyExercises,
+  resetStudentPassword,
 } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/alunos/$studentId")({
@@ -41,12 +43,13 @@ function StudentDetailPage() {
   });
 
   const [showNew, setShowNew] = useState(false);
+  const [showReset, setShowReset] = useState(false);
 
   if (isLoading) return <Shell mode="admin"><p className="text-xs font-mono">Carregando…</p></Shell>;
   if (error) return <Shell mode="admin"><p className="text-xs font-mono text-destructive">{(error as Error).message}</p></Shell>;
   if (!data) return null;
 
-  const { student, workouts, items } = data;
+  const { student, workouts, items } = data as typeof data & { student: { email: string | null } };
 
   return (
     <Shell mode="admin">
@@ -56,11 +59,17 @@ function StudentDetailPage() {
         <div>
           <p className="text-xs font-mono uppercase tracking-[0.2em] text-primary mb-2">Aluno</p>
           <h1 className="text-4xl font-extrabold uppercase tracking-tight">{student.display_name}</h1>
-          {student.goal && <p className="mt-2 text-xs font-mono uppercase text-muted-foreground">Objetivo: {student.goal}</p>}
+          {student.email && <p className="mt-2 text-xs font-mono text-muted-foreground">Login: {student.email}</p>}
+          {student.goal && <p className="mt-1 text-xs font-mono uppercase text-muted-foreground">Objetivo: {student.goal}</p>}
         </div>
-        <button onClick={() => setShowNew(true)} className="rounded-full bg-primary px-5 py-3 text-xs font-extrabold uppercase tracking-widest text-primary-foreground transition-transform hover:scale-[1.03]">
-          + Novo Treino
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={() => setShowReset(true)} className="flex items-center gap-2 rounded-full border border-border px-4 py-3 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-primary hover:bg-secondary hover:text-primary">
+            <KeyRound className="size-3.5" /> Redefinir senha
+          </button>
+          <button onClick={() => setShowNew(true)} className="rounded-full bg-primary px-5 py-3 text-xs font-extrabold uppercase tracking-widest text-primary-foreground transition-transform hover:scale-[1.03]">
+            + Novo Treino
+          </button>
+        </div>
       </div>
 
       {workouts.length === 0 && (
@@ -81,7 +90,97 @@ function StudentDetailPage() {
       </div>
 
       {showNew && <NewWorkoutModal studentId={studentId} onClose={() => setShowNew(false)} />}
+      {showReset && <ResetPasswordModal studentId={studentId} name={student.display_name ?? "aluno"} email={student.email} onClose={() => setShowReset(false)} />}
     </Shell>
+  );
+}
+
+function genPassword(): string {
+  // Senha forte legível: 4 letras + 4 dígitos + símbolo. Sem libs de random
+  // bloqueadas — usa crypto do navegador.
+  const letters = "abcdefghijkmnpqrstuvwxyz";
+  const digits = "23456789";
+  const buf = new Uint32Array(8);
+  crypto.getRandomValues(buf);
+  let out = "";
+  for (let i = 0; i < 4; i++) out += letters[buf[i] % letters.length];
+  for (let i = 4; i < 8; i++) out += digits[buf[i] % digits.length];
+  return out + "@";
+}
+
+function ResetPasswordModal({ studentId, name, email, onClose }: { studentId: string; name: string; email: string | null; onClose: () => void }) {
+  const reset = useServerFn(resetStudentPassword);
+  const [password, setPassword] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  const mut = useMutation({
+    mutationFn: () => reset({ data: { studentId, password } }),
+    onSuccess: () => {
+      setDone(true);
+      toast.success("Senha redefinida", { description: name });
+    },
+    onError: (e: Error) => setErr(e.message),
+  });
+
+  const copy = () => {
+    const txt = email ? `Login: ${email}\nSenha: ${password}` : `Senha: ${password}`;
+    navigator.clipboard?.writeText(txt);
+    toast("Copiado", { description: "Credenciais copiadas." });
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl">
+        <h2 className="text-2xl font-extrabold uppercase tracking-tight flex items-center gap-2">
+          <KeyRound className="size-5 text-primary" /> Redefinir senha
+        </h2>
+        <p className="mt-1 text-xs font-mono uppercase text-muted-foreground">
+          {email ? `Login: ${email}` : `Aluno: ${name}`}
+        </p>
+        <p className="mt-3 text-[11px] text-muted-foreground">
+          A senha atual não pode ser exibida (fica criptografada). Defina uma nova abaixo e passe pro aluno.
+        </p>
+
+        <div className="mt-5 space-y-3">
+          <div>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Nova senha (mín. 6)</label>
+            <div className="mt-1 flex gap-2">
+              <input
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setDone(false); }}
+                placeholder="Digite ou gere"
+                className="w-full rounded-md border border-border bg-card/70 px-3 py-2 font-mono text-sm outline-none transition-colors focus:border-primary"
+              />
+              <button type="button" onClick={() => { setPassword(genPassword()); setDone(false); }} title="Gerar senha" className="shrink-0 grid place-items-center rounded-md border border-border px-3 hover:border-primary hover:text-primary">
+                <RefreshCw className="size-4" />
+              </button>
+            </div>
+          </div>
+
+          {password && (
+            <button type="button" onClick={copy} className="flex items-center gap-2 text-[10px] font-mono uppercase text-primary hover:underline">
+              <Copy className="size-3" /> Copiar credenciais
+            </button>
+          )}
+
+          {err && <p className="text-xs font-mono text-destructive uppercase">{err}</p>}
+          {done && <p className="text-xs font-mono text-primary uppercase">✓ Senha alterada. Já vale pro aluno entrar.</p>}
+
+          <div className="flex gap-2 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 rounded-full border border-border py-3 text-[10px] font-mono uppercase tracking-widest hover:bg-secondary">Fechar</button>
+            <button
+              type="button"
+              onClick={() => { setErr(null); if (password.length < 6) { setErr("Mínimo 6 caracteres"); return; } mut.mutate(); }}
+              disabled={mut.isPending}
+              className="flex-1 rounded-full bg-primary py-3 text-[10px] font-extrabold uppercase tracking-widest text-primary-foreground disabled:opacity-50"
+            >
+              {mut.isPending ? "Salvando..." : "Redefinir"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

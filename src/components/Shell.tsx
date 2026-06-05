@@ -22,10 +22,13 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
   const { user, role, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
-  // Guard de acesso por papel — separa o painel admin (treinador) do portal do aluno.
+  // Guard de acesso por papel — separa estritamente o painel admin (treinador)
+  // do portal do aluno.
   // - Sem login → /login
-  // - Painel admin acessado por aluno → manda pro /aluno
+  // - Aluno tentando o painel admin → /aluno
+  // - Treinador no portal do aluno → /dashboard
   const adminBlocked = mode === "admin" && role !== null && role !== "trainer";
+  const studentBlocked = mode === "student" && role !== null && role !== "aluno";
   useEffect(() => {
     if (loading) return;
     if (!user) {
@@ -33,11 +36,12 @@ export function Shell({ children, mode = "admin" }: { children: ReactNode; mode?
       return;
     }
     if (adminBlocked) navigate({ to: "/aluno", replace: true });
-  }, [loading, user, adminBlocked, navigate]);
+    else if (studentBlocked) navigate({ to: "/dashboard", replace: true });
+  }, [loading, user, adminBlocked, studentBlocked, navigate]);
 
   // Enquanto resolve a sessão/papel, ou se o acesso não é permitido, não renderiza o conteúdo.
-  const resolving = loading || !user || (mode === "admin" && role === null);
-  if (resolving || adminBlocked) {
+  const resolving = loading || !user || role === null;
+  if (resolving || adminBlocked || studentBlocked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-transparent">
         <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Carregando…</p>

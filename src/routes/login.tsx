@@ -26,8 +26,10 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      navigate({ to: role === "trainer" ? "/" : "/aluno", replace: true });
+    // Só redireciona quando o papel já foi resolvido (role !== null), senão
+    // o admin era jogado no portal do aluno por causa da corrida de carregamento.
+    if (user && role) {
+      navigate({ to: role === "trainer" ? "/dashboard" : "/aluno", replace: true });
     }
   }, [user, role, navigate]);
 
