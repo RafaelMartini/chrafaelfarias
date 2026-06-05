@@ -3,10 +3,11 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Shell } from "@/components/Shell";
+import { Shell, MetricCard } from "@/components/Shell";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useRequireTrainer } from "@/hooks/use-require-role";
 import { KeyRound, Copy, RefreshCw } from "lucide-react";
+import { TrainingCalendar } from "@/components/TrainingCalendar";
 import {
   getStudentWithWorkouts,
   createWorkout,
@@ -15,6 +16,7 @@ import {
   removeExerciseFromWorkout,
   listMyExercises,
   resetStudentPassword,
+  getStudentProgress,
 } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/alunos/$studentId")({
@@ -42,6 +44,13 @@ function StudentDetailPage() {
     enabled: !!user && role === "trainer",
   });
 
+  const getProg = useServerFn(getStudentProgress);
+  const { data: progressLogs = [] } = useQuery({
+    queryKey: ["student-progress", studentId],
+    queryFn: () => getProg({ data: { studentId } }) as Promise<Array<{ completed_at: string }>>,
+    enabled: !!user && role === "trainer",
+  });
+
   const [showNew, setShowNew] = useState(false);
   const [showReset, setShowReset] = useState(false);
 
@@ -50,6 +59,15 @@ function StudentDetailPage() {
   if (!data) return null;
 
   const { student, workouts, items } = data as typeof data & { student: { email: string | null } };
+
+  const nowD = new Date();
+  const monthCount = progressLogs.filter((l) => {
+    const d = new Date(l.completed_at);
+    return d.getFullYear() === nowD.getFullYear() && d.getMonth() === nowD.getMonth();
+  }).length;
+  const lastLabel = progressLogs[0]
+    ? new Date(progressLogs[0].completed_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
+    : "—";
 
   return (
     <Shell mode="admin">
@@ -72,6 +90,21 @@ function StudentDetailPage() {
         </div>
       </div>
 
+      {/* Progresso do aluno */}
+      <section className="mb-12 animate-reveal">
+        <h2 className="text-2xl font-extrabold uppercase tracking-tighter mb-4">Progresso</h2>
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <MetricCard label="Concluídos" value={progressLogs.length} />
+          <MetricCard label="Este mês" value={monthCount} highlight />
+          <MetricCard label="Último treino" value={lastLabel} />
+        </div>
+        <div className="rounded-3xl border border-border bg-card/75 p-5 shadow-2xl backdrop-blur-xl sm:p-8">
+          <h3 className="text-lg font-extrabold uppercase mb-6">Calendário de treinos</h3>
+          <TrainingCalendar logs={progressLogs} />
+        </div>
+      </section>
+
+      <h2 className="text-2xl font-extrabold uppercase tracking-tighter mb-4">Treinos</h2>
       {workouts.length === 0 && (
         <div className="rounded-3xl border border-dashed border-border p-10 text-center">
           <p className="text-sm font-mono uppercase text-muted-foreground">Nenhum treino criado. Comece adicionando um treino e atribuindo um dia da semana.</p>

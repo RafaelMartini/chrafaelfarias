@@ -160,6 +160,22 @@ export const deleteExercise = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const getStudentProgress = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ studentId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    await assertTrainer(userId);
+    await assertOwnsStudent(userId, data.studentId);
+    const { data: logs, error } = await supabaseAdmin
+      .from("workout_logs")
+      .select("id, workout_id, completed_at")
+      .eq("student_id", data.studentId)
+      .order("completed_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (logs ?? []) as Array<{ id: string; workout_id: string; completed_at: string }>;
+  });
+
 // ============ WORKOUTS ============
 
 export const getStudentWithWorkouts = createServerFn({ method: "POST" })

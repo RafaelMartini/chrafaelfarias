@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Check, RotateCcw } from "lucide-react";
 import { Shell } from "@/components/Shell";
-import { useWorkoutLog } from "@/lib/workout-log";
+import { useWorkoutLogs } from "@/lib/workout-logs";
 import { embedUrl } from "@/lib/video";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -37,7 +37,7 @@ function AlunoPage() {
   const { user } = useAuth();
   const firstName =
     (user?.user_metadata?.display_name || user?.email || "").toString().split(/[\s@]/)[0] || "Aluno";
-  const { completedCount, isCompleted, toggle } = useWorkoutLog();
+  const { completedCount, isCompletedToday, toggle } = useWorkoutLogs();
 
   const { data: workouts = [], isLoading } = useQuery({
     queryKey: ["my-plan", user?.id],
@@ -80,11 +80,11 @@ function AlunoPage() {
     () => (selected ? [...selected.workout_exercises].sort((a, b) => a.order_index - b.order_index) : []),
     [selected],
   );
-  const dayCompleted = selected ? isCompleted(selected.id) : false;
+  const dayCompleted = selected ? isCompletedToday(selected.id) : false;
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!selected) return;
-    const nowCompleted = toggle(selected.id);
+    const nowCompleted = await toggle(selected.id);
     if (nowCompleted) toast.success("Treino concluído! 🔥", { description: selected.name });
     else toast("Conclusão desfeita", { description: "O treino voltou para pendente." });
   };
@@ -101,7 +101,7 @@ function AlunoPage() {
             <div className="flex gap-2 flex-wrap">
               {workouts.map((w) => {
                 const active = selected?.id === w.id;
-                const done = isCompleted(w.id);
+                const done = isCompletedToday(w.id);
                 return (
                   <button
                     key={w.id}
