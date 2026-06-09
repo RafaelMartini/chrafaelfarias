@@ -194,9 +194,8 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
-  const embed = embedUrl(form.video_url);
-  // Vídeo enviado pra nuvem (arquivo) — diferente de um link colado (YouTube/Vimeo).
-  const isUploaded = !!form.video_url && !embed;
+  // Todo vídeo agora é arquivo enviado pra nuvem (sem mais colar link de YouTube/Vimeo).
+  const isUploaded = !!form.video_url;
 
   const mut = useMutation({
     mutationFn: () =>
@@ -211,7 +210,10 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
 
   const onUpload = async (file: File) => {
     if (!user) return;
-    if (!file.type.startsWith("video/")) {
+    // Aceita por mime OU por extensão — alguns .mov/.mp4 chegam com file.type vazio.
+    const okType = file.type.startsWith("video/");
+    const okExt = /\.(mp4|mov|m4v|webm|mkv|avi|3gp|qt|ogv|hevc)$/i.test(file.name);
+    if (!okType && !okExt) {
       toast.error("Selecione um arquivo de vídeo");
       return;
     }
@@ -222,7 +224,8 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
       const token = sess.session?.access_token;
       const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
       const APIKEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
-      const ext = file.name.split(".").pop() || "mp4";
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const contentType = file.type || mimeForExt(ext);
       const path = `${user.id}/${Date.now()}.${ext}`;
 
       // XHR direto no Storage pra ter evento de progresso (o supabase.upload não expõe %).
@@ -232,14 +235,18 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
         xhr.setRequestHeader("authorization", `Bearer ${token}`);
         xhr.setRequestHeader("apikey", APIKEY);
         xhr.setRequestHeader("x-upsert", "false");
-        xhr.setRequestHeader("content-type", file.type);
+        xhr.setRequestHeader("content-type", contentType);
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
         };
         xhr.onload = () =>
           xhr.status >= 200 && xhr.status < 300
             ? resolve()
-            : reject(new Error(`Upload falhou (${xhr.status})`));
+            : reject(new Error(
+                xhr.status === 413
+                  ? "Vídeo muito grande — reduza o tamanho ou aumente o limite no Supabase"
+                  : `Upload falhou (${xhr.status})`,
+              ));
         xhr.onerror = () => reject(new Error("Erro de rede no upload"));
         xhr.send(file);
       });
@@ -266,10 +273,10 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
           <Field label="Nome" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
           <Field label="Grupo muscular" value={form.muscle_group} onChange={(v) => setForm({ ...form, muscle_group: v })} placeholder="Ex: Peitoral" />
 
-          {/* Vídeo: upload de arquivo OU URL do YouTube/Vimeo */}
+          {/* Vídeo: upload de arquivo (.mp4, .mov, etc.) */}
           <div>
             <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Vídeo de execução</label>
-            <input ref={fileRef} type="file" accept="video/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); }} />
+            <input ref={fileRef} type="file" accept="video/*,.mp4,.mov,.m4v,.webm,.mkv,.avi,.3gp" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); }} />
             {isUploaded ? (
               // Arquivo já enviado: mostra status + preview, sem expor a URL do banco.
               <div className="mt-1 space-y-2">
@@ -307,19 +314,6 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
               </>
             )}
           </div>
-          {!isUploaded && (
-            <Field label="…ou cole uma URL (YouTube/Vimeo)" value={form.video_url} onChange={(v) => setForm({ ...form, video_url: v })} placeholder="https://youtube.com/watch?v=..." />
-          )}
-          {embed && (
-            <div className="space-y-2">
-              <p className="flex items-center gap-1.5 text-[10px] font-mono uppercase text-primary">
-                <Film className="size-3" /> vídeo válido (embed)
-              </p>
-              <div className="overflow-hidden rounded-md border border-border bg-black aspect-video">
-                <iframe src={embed} title="preview" className="h-full w-full" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
-              </div>
-            </div>
-          )}
 
           <div>
             <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Descrição / instruções</label>
@@ -340,6 +334,23 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
       </div>
     </div>
   );
+}
+
+// Fallback de content-type quando o navegador não informa file.type (comum em .mov).
+function mimeForExt(ext: string): string {
+  const map: Record<string, string> = {
+    mp4: "video/mp4",
+    m4v: "video/mp4",
+    mov: "video/quicktime",
+    qt: "video/quicktime",
+    webm: "video/webm",
+    mkv: "video/x-matroska",
+    avi: "video/x-msvideo",
+    "3gp": "video/3gpp",
+    ogv: "video/ogg",
+    hevc: "video/mp4",
+  };
+  return map[ext] || "video/mp4";
 }
 
 function Field({ label, value, onChange, required, placeholder }: { label: string; value: string; onChange: (v: string) => void; required?: boolean; placeholder?: string }) {
