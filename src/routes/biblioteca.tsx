@@ -3,14 +3,14 @@ import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Search, Plus, Film, Upload, Loader2 } from "lucide-react";
+import { Search, Plus, Film, Upload, Loader2, Pencil, Check, X } from "lucide-react";
 import { Shell } from "@/components/Shell";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { embedUrl } from "@/lib/video";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useRequireTrainer } from "@/hooks/use-require-role";
-import { listMyExercises, createExercise, deleteExercise } from "@/lib/admin.functions";
+import { listMyExercises, createExercise, updateExercise, deleteExercise } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/biblioteca")({
   head: () => ({ meta: [{ title: "Biblioteca de Exercícios — Rafael Faria" }] }),
@@ -34,6 +34,7 @@ function BibliotecaPage() {
   const [query, setQuery] = useState("");
   const [group, setGroup] = useState("Todos");
   const [open, setOpen] = useState(false);
+  const [toEdit, setToEdit] = useState<Exercise | null>(null);
   const [toDelete, setToDelete] = useState<Exercise | null>(null);
 
   const { data: exercises = [], isLoading } = useQuery({
@@ -139,10 +140,16 @@ function BibliotecaPage() {
                   {(embed || e.video_url) && <Film className="size-3.5 shrink-0 text-primary" />}
                 </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">{e.description || "—"}</p>
-                <div className="mt-4">
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => setToEdit(e)}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-primary hover:bg-secondary hover:text-primary"
+                  >
+                    <Pencil className="size-3" /> Editar
+                  </button>
                   <button
                     onClick={() => setToDelete(e)}
-                    className="w-full rounded-full border border-border py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-destructive hover:bg-secondary hover:text-destructive"
+                    className="flex flex-1 items-center justify-center rounded-full border border-border py-2 text-[10px] font-mono uppercase tracking-widest transition-colors hover:border-destructive hover:bg-secondary hover:text-destructive"
                   >
                     Excluir
                   </button>
@@ -153,7 +160,8 @@ function BibliotecaPage() {
         })}
       </div>
 
-      {open && <NewExerciseModal onClose={() => setOpen(false)} />}
+      {open && <ExerciseModal onClose={() => setOpen(false)} />}
+      {toEdit && <ExerciseModal exercise={toEdit} onClose={() => setToEdit(null)} />}
 
       <ConfirmDialog
         open={!!toDelete}
@@ -171,24 +179,34 @@ function BibliotecaPage() {
   );
 }
 
-function NewExerciseModal({ onClose }: { onClose: () => void }) {
+function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: () => void }) {
   const qc = useQueryClient();
   const { user } = useAuth();
   const create = useServerFn(createExercise);
-  const [form, setForm] = useState({ name: "", muscle_group: "", description: "", video_url: "" });
+  const update = useServerFn(updateExercise);
+  const isEdit = !!exercise;
+  const [form, setForm] = useState({
+    name: exercise?.name ?? "",
+    muscle_group: exercise?.muscle_group ?? "",
+    description: exercise?.description ?? "",
+    video_url: exercise?.video_url ?? "",
+  });
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const embed = embedUrl(form.video_url);
+  // Vídeo enviado pra nuvem (arquivo) — diferente de um link colado (YouTube/Vimeo).
+  const isUploaded = !!form.video_url && !embed;
 
   const mut = useMutation({
-    mutationFn: () => create({ data: form }),
+    mutationFn: () =>
+      isEdit ? update({ data: { id: exercise!.id, ...form } }) : create({ data: form }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-exercises"] });
-      toast.success("Exercício cadastrado", { description: form.name });
+      toast.success(isEdit ? "Exercício atualizado" : "Exercício cadastrado", { description: form.name });
       onClose();
     },
-    onError: (e: Error) => toast.error("Erro ao cadastrar", { description: e.message }),
+    onError: (e: Error) => toast.error(isEdit ? "Erro ao salvar" : "Erro ao cadastrar", { description: e.message }),
   });
 
   const onUpload = async (file: File) => {
@@ -240,7 +258,7 @@ function NewExerciseModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-extrabold uppercase tracking-tight">Novo Exercício</h2>
+        <h2 className="text-2xl font-extrabold uppercase tracking-tight">{isEdit ? "Editar Exercício" : "Novo Exercício"}</h2>
         <form
           onSubmit={(e) => { e.preventDefault(); mut.mutate(); }}
           className="mt-6 space-y-3"
@@ -252,32 +270,53 @@ function NewExerciseModal({ onClose }: { onClose: () => void }) {
           <div>
             <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Vídeo de execução</label>
             <input ref={fileRef} type="file" accept="video/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); }} />
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              className="mt-1 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border py-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
-            >
-              {uploading ? <><Loader2 className="size-3.5 animate-spin" /> Enviando… {progress}%</> : <><Upload className="size-3.5" /> Enviar arquivo de vídeo</>}
-            </button>
-            {uploading && (
-              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border">
-                <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+            {isUploaded ? (
+              // Arquivo já enviado: mostra status + preview, sem expor a URL do banco.
+              <div className="mt-1 space-y-2">
+                <div className="flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2">
+                  <span className="flex items-center gap-1.5 text-[10px] font-mono uppercase text-primary">
+                    <Check className="size-3.5" /> Vídeo enviado
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, video_url: "" }))}
+                    className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground transition-colors hover:text-destructive"
+                  >
+                    <X className="size-3" /> Remover
+                  </button>
+                </div>
+                <div className="overflow-hidden rounded-md border border-border bg-black aspect-video">
+                  <video src={form.video_url} controls className="h-full w-full" />
+                </div>
               </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border py-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
+                >
+                  {uploading ? <><Loader2 className="size-3.5 animate-spin" /> Enviando… {progress}%</> : <><Upload className="size-3.5" /> Enviar arquivo de vídeo</>}
+                </button>
+                {uploading && (
+                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border">
+                    <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+                  </div>
+                )}
+              </>
             )}
           </div>
-          <Field label="…ou cole uma URL (YouTube/Vimeo)" value={form.video_url} onChange={(v) => setForm({ ...form, video_url: v })} placeholder="https://youtube.com/watch?v=..." />
-          {form.video_url && (
+          {!isUploaded && (
+            <Field label="…ou cole uma URL (YouTube/Vimeo)" value={form.video_url} onChange={(v) => setForm({ ...form, video_url: v })} placeholder="https://youtube.com/watch?v=..." />
+          )}
+          {embed && (
             <div className="space-y-2">
               <p className="flex items-center gap-1.5 text-[10px] font-mono uppercase text-primary">
-                <Film className="size-3" /> {embed ? "vídeo válido (embed)" : "vídeo enviado — preview:"}
+                <Film className="size-3" /> vídeo válido (embed)
               </p>
               <div className="overflow-hidden rounded-md border border-border bg-black aspect-video">
-                {embed ? (
-                  <iframe src={embed} title="preview" className="h-full w-full" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
-                ) : (
-                  <video src={form.video_url} controls className="h-full w-full" />
-                )}
+                <iframe src={embed} title="preview" className="h-full w-full" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
               </div>
             </div>
           )}
@@ -294,7 +333,7 @@ function NewExerciseModal({ onClose }: { onClose: () => void }) {
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 rounded-full border border-border py-3 text-[10px] font-mono uppercase tracking-widest hover:bg-secondary">Cancelar</button>
             <button type="submit" disabled={mut.isPending || uploading} className="flex-1 rounded-full bg-primary py-3 text-[10px] font-extrabold uppercase tracking-widest text-primary-foreground disabled:opacity-50">
-              {mut.isPending ? "Salvando..." : "Cadastrar"}
+              {mut.isPending ? "Salvando..." : isEdit ? "Salvar" : "Cadastrar"}
             </button>
           </div>
         </form>

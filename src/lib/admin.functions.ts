@@ -145,6 +145,36 @@ export const createExercise = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const updateExercise = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        name: z.string().trim().min(1).max(120),
+        description: z.string().trim().max(1000).optional().or(z.literal("")),
+        muscle_group: z.string().trim().max(60).optional().or(z.literal("")),
+        video_url: z.string().trim().url().max(500).optional().or(z.literal("")),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    await assertTrainer(userId);
+    const { error } = await supabaseAdmin
+      .from("exercises")
+      .update({
+        name: data.name,
+        description: data.description || null,
+        muscle_group: data.muscle_group || null,
+        video_url: data.video_url || null,
+      })
+      .eq("id", data.id)
+      .eq("trainer_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const deleteExercise = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
