@@ -206,6 +206,64 @@ export const getStudentProgress = createServerFn({ method: "POST" })
     return (logs ?? []) as Array<{ id: string; workout_id: string; completed_at: string }>;
   });
 
+// ============ ANAMNESE / COMPARAÇÃO FÍSICA ============
+
+const STUDENT_PHOTOS_BUCKET = "student-photos";
+
+async function signStudentPhoto(path: string | null): Promise<string | null> {
+  if (!path) return null;
+  const { data } = await supabaseAdmin.storage.from(STUDENT_PHOTOS_BUCKET).createSignedUrl(path, 3600);
+  return data?.signedUrl ?? null;
+}
+
+export const getStudentAnamnese = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ studentId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    await assertTrainer(userId);
+    await assertOwnsStudent(userId, data.studentId);
+    const { data: row, error } = await supabaseAdmin
+      .from("anamnese")
+      .select("answers, photo_frente, photo_costas, photo_lado, updated_at")
+      .eq("student_id", data.studentId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) return null;
+    return {
+      answers: (row.answers ?? {}) as Record<string, string>,
+      updated_at: row.updated_at as string,
+      photos: {
+        frente: await signStudentPhoto(row.photo_frente),
+        costas: await signStudentPhoto(row.photo_costas),
+        lado: await signStudentPhoto(row.photo_lado),
+      },
+    };
+  });
+
+export const getStudentPhysiquePhotos = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ studentId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    await assertTrainer(userId);
+    await assertOwnsStudent(userId, data.studentId);
+    const { data: rows, error } = await supabaseAdmin
+      .from("physique_photos")
+      .select("slot, photo_path, taken_on, label")
+      .eq("student_id", data.studentId)
+      .order("slot", { ascending: true });
+    if (error) throw new Error(error.message);
+    return Promise.all(
+      (rows ?? []).map(async (r) => ({
+        slot: r.slot as number,
+        taken_on: r.taken_on as string | null,
+        label: r.label as string | null,
+        url: await signStudentPhoto(r.photo_path),
+      })),
+    );
+  });
+
 // ============ WORKOUTS ============
 
 export const getStudentWithWorkouts = createServerFn({ method: "POST" })

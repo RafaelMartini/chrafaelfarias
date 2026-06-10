@@ -91,6 +91,7 @@ function AlunoPage() {
 
   return (
     <Shell mode="student">
+      <AnamneseBanner />
       <section className="space-y-8 animate-reveal">
         <div className="flex items-end justify-between flex-wrap gap-4">
           <div>
@@ -260,6 +261,40 @@ function AlunoPage() {
         </aside>
       </section>
     </Shell>
+  );
+}
+
+function AnamneseBanner() {
+  const { user } = useAuth();
+  const { data, isLoading } = useQuery({
+    queryKey: ["anamnese-status", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("anamnese").select("answers").maybeSingle();
+      if (error) throw new Error(error.message);
+      return data as { answers: Record<string, string> | null } | null;
+    },
+  });
+
+  // Considera preenchida se já há pelo menos uma resposta.
+  const filled = !!data?.answers && Object.values(data.answers).some((v) => v && String(v).trim() !== "");
+  if (isLoading || filled) return null;
+
+  return (
+    <Link
+      to="/aluno/anamnese"
+      className="mb-6 flex items-center justify-between gap-4 rounded-3xl border border-primary/40 bg-primary/10 px-5 py-4 transition-colors hover:bg-primary/15 animate-reveal"
+    >
+      <div>
+        <p className="text-xs font-extrabold uppercase tracking-widest text-primary">Preencha sua anamnese</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Responda o questionário e envie suas fotos para o coach montar seu protocolo.
+        </p>
+      </div>
+      <span className="shrink-0 rounded-full bg-primary px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-primary-foreground">
+        Começar →
+      </span>
+    </Link>
   );
 }
 

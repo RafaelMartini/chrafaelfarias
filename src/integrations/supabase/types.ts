@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      anamnese: {
+        Row: {
+          answers: Json
+          created_at: string
+          id: string
+          photo_costas: string | null
+          photo_frente: string | null
+          photo_lado: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          photo_costas?: string | null
+          photo_frente?: string | null
+          photo_lado?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          photo_costas?: string | null
+          photo_frente?: string | null
+          photo_lado?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      physique_photos: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          photo_path: string | null
+          slot: number
+          student_id: string
+          taken_on: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          photo_path?: string | null
+          slot: number
+          student_id: string
+          taken_on?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          photo_path?: string | null
+          slot?: number
+          student_id?: string
+          taken_on?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      availability_slots: {
+        Row: {
+          booked_by: string | null
+          created_at: string
+          duration_minutes: number
+          id: string
+          location: string | null
+          modality: string
+          starts_at: string
+          trainer_id: string
+        }
+        Insert: {
+          booked_by?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          location?: string | null
+          modality?: string
+          starts_at: string
+          trainer_id: string
+        }
+        Update: {
+          booked_by?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          location?: string | null
+          modality?: string
+          starts_at?: string
+          trainer_id?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           created_at: string
