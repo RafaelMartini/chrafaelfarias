@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as MontarTreinoRouteImport } from './routes/montar-treino'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ComparacoesRouteImport } from './routes/comparacoes'
 import { Route as BibliotecaRouteImport } from './routes/biblioteca'
+import { Route as AnamnesesRouteImport } from './routes/anamneses'
 import { Route as AlunosRouteImport } from './routes/alunos'
 import { Route as AlunoRouteImport } from './routes/aluno'
 import { Route as AgendaRouteImport } from './routes/agenda'
@@ -40,9 +42,19 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComparacoesRoute = ComparacoesRouteImport.update({
+  id: '/comparacoes',
+  path: '/comparacoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BibliotecaRoute = BibliotecaRouteImport.update({
   id: '/biblioteca',
   path: '/biblioteca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnamnesesRoute = AnamnesesRouteImport.update({
+  id: '/anamneses',
+  path: '/anamneses',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AlunosRoute = AlunosRouteImport.update({
@@ -106,7 +118,9 @@ export interface FileRoutesByFullPath {
   '/agenda': typeof AgendaRoute
   '/aluno': typeof AlunoRouteWithChildren
   '/alunos': typeof AlunosRouteWithChildren
+  '/anamneses': typeof AnamnesesRoute
   '/biblioteca': typeof BibliotecaRoute
+  '/comparacoes': typeof ComparacoesRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/montar-treino': typeof MontarTreinoRoute
@@ -121,7 +135,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
+  '/anamneses': typeof AnamnesesRoute
   '/biblioteca': typeof BibliotecaRoute
+  '/comparacoes': typeof ComparacoesRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/montar-treino': typeof MontarTreinoRoute
@@ -139,7 +155,9 @@ export interface FileRoutesById {
   '/agenda': typeof AgendaRoute
   '/aluno': typeof AlunoRouteWithChildren
   '/alunos': typeof AlunosRouteWithChildren
+  '/anamneses': typeof AnamnesesRoute
   '/biblioteca': typeof BibliotecaRoute
+  '/comparacoes': typeof ComparacoesRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/montar-treino': typeof MontarTreinoRoute
@@ -158,7 +176,9 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/aluno'
     | '/alunos'
+    | '/anamneses'
     | '/biblioteca'
+    | '/comparacoes'
     | '/dashboard'
     | '/login'
     | '/montar-treino'
@@ -173,7 +193,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/agenda'
+    | '/anamneses'
     | '/biblioteca'
+    | '/comparacoes'
     | '/dashboard'
     | '/login'
     | '/montar-treino'
@@ -190,7 +212,9 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/aluno'
     | '/alunos'
+    | '/anamneses'
     | '/biblioteca'
+    | '/comparacoes'
     | '/dashboard'
     | '/login'
     | '/montar-treino'
@@ -208,7 +232,9 @@ export interface RootRouteChildren {
   AgendaRoute: typeof AgendaRoute
   AlunoRoute: typeof AlunoRouteWithChildren
   AlunosRoute: typeof AlunosRouteWithChildren
+  AnamnesesRoute: typeof AnamnesesRoute
   BibliotecaRoute: typeof BibliotecaRoute
+  ComparacoesRoute: typeof ComparacoesRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   MontarTreinoRoute: typeof MontarTreinoRoute
@@ -237,11 +263,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/comparacoes': {
+      id: '/comparacoes'
+      path: '/comparacoes'
+      fullPath: '/comparacoes'
+      preLoaderRoute: typeof ComparacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/biblioteca': {
       id: '/biblioteca'
       path: '/biblioteca'
       fullPath: '/biblioteca'
       preLoaderRoute: typeof BibliotecaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/anamneses': {
+      id: '/anamneses'
+      path: '/anamneses'
+      fullPath: '/anamneses'
+      preLoaderRoute: typeof AnamnesesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/alunos': {
@@ -360,7 +400,9 @@ const rootRouteChildren: RootRouteChildren = {
   AgendaRoute: AgendaRoute,
   AlunoRoute: AlunoRouteWithChildren,
   AlunosRoute: AlunosRouteWithChildren,
+  AnamnesesRoute: AnamnesesRoute,
   BibliotecaRoute: BibliotecaRoute,
+  ComparacoesRoute: ComparacoesRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   MontarTreinoRoute: MontarTreinoRoute,

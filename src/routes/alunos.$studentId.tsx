@@ -8,8 +8,6 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useRequireTrainer } from "@/hooks/use-require-role";
 import { KeyRound, Copy, RefreshCw } from "lucide-react";
 import { TrainingCalendar } from "@/components/TrainingCalendar";
-import { PhotoFrame } from "@/components/PhotoFrame";
-import { ANAMNESE_FIELDS, ANAMNESE_PHOTOS } from "@/lib/anamnese";
 import {
   getStudentWithWorkouts,
   createWorkout,
@@ -19,8 +17,6 @@ import {
   listMyExercises,
   resetStudentPassword,
   getStudentProgress,
-  getStudentAnamnese,
-  getStudentPhysiquePhotos,
 } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/alunos/$studentId")({
@@ -52,20 +48,6 @@ function StudentDetailPage() {
   const { data: progressLogs = [] } = useQuery({
     queryKey: ["student-progress", studentId],
     queryFn: () => getProg({ data: { studentId } }) as Promise<Array<{ completed_at: string }>>,
-    enabled: !!user && role === "trainer",
-  });
-
-  const getAnamnese = useServerFn(getStudentAnamnese);
-  const { data: anamnese } = useQuery({
-    queryKey: ["student-anamnese", studentId],
-    queryFn: () => getAnamnese({ data: { studentId } }),
-    enabled: !!user && role === "trainer",
-  });
-
-  const getPhysique = useServerFn(getStudentPhysiquePhotos);
-  const { data: physique = [] } = useQuery({
-    queryKey: ["student-physique", studentId],
-    queryFn: () => getPhysique({ data: { studentId } }),
     enabled: !!user && role === "trainer",
   });
 
@@ -152,87 +134,6 @@ function StudentDetailPage() {
           <h3 className="text-lg font-extrabold uppercase mb-6">Calendário de treinos</h3>
           <TrainingCalendar logs={progressLogs} />
         </div>
-      </section>
-
-      {/* Anamnese do aluno */}
-      <section className="mb-12 animate-reveal">
-        <h2 className="text-2xl font-extrabold uppercase tracking-tighter mb-4">Anamnese</h2>
-        {!anamnese ? (
-          <div className="rounded-3xl border border-dashed border-border p-10 text-center">
-            <p className="text-sm font-mono uppercase text-muted-foreground">
-              O aluno ainda não preencheu a anamnese.
-            </p>
-          </div>
-        ) : (
-          <div className="rounded-3xl border border-border bg-card/75 p-6 shadow-2xl backdrop-blur-xl sm:p-8 space-y-8">
-            <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-              {ANAMNESE_FIELDS.map((f) => {
-                const v = anamnese.answers?.[f.id];
-                return (
-                  <div key={f.id} className={f.type === "textarea" ? "md:col-span-2" : ""}>
-                    <dt className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                      {f.label}
-                    </dt>
-                    <dd className="mt-0.5 text-sm whitespace-pre-wrap">
-                      {v ? v : <span className="text-muted-foreground">—</span>}
-                    </dd>
-                  </div>
-                );
-              })}
-            </dl>
-            <div>
-              <h3 className="text-lg font-extrabold uppercase mb-4">Fotos de avaliação</h3>
-              <div className="grid grid-cols-3 gap-3 sm:gap-4 max-w-xl">
-                {ANAMNESE_PHOTOS.map((p) => {
-                  const url =
-                    anamnese.photos?.[
-                      p.label === "Frente" ? "frente" : p.label === "Costas" ? "costas" : "lado"
-                    ];
-                  return <PhotoFrame key={p.key} label={p.label} url={url ?? null} readOnly />;
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* Comparação física */}
-      <section className="mb-12 animate-reveal">
-        <h2 className="text-2xl font-extrabold uppercase tracking-tighter mb-4">
-          Comparação física
-        </h2>
-        {physique.filter((p) => p.url).length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border p-10 text-center">
-            <p className="text-sm font-mono uppercase text-muted-foreground">
-              O aluno ainda não enviou fotos de comparação.
-            </p>
-          </div>
-        ) : (
-          <div className="rounded-3xl border border-border bg-card/75 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-              {physique
-                .filter((p) => p.url)
-                .map((p) => (
-                  <PhotoFrame
-                    key={p.slot}
-                    label={p.label || `Foto ${p.slot + 1}`}
-                    url={p.url}
-                    readOnly
-                  >
-                    {p.taken_on && (
-                      <p className="mt-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                        {new Date(`${p.taken_on}T12:00:00`).toLocaleDateString("pt-BR", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </p>
-                    )}
-                  </PhotoFrame>
-                ))}
-            </div>
-          </div>
-        )}
       </section>
 
       <h2 className="text-2xl font-extrabold uppercase tracking-tighter mb-4">Treinos</h2>

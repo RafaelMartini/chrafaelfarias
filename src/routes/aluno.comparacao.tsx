@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Shell } from "@/components/Shell";
 import { PhotoFrame } from "@/components/PhotoFrame";
-import { TrainingCalendar } from "@/components/TrainingCalendar";
+import { PhotoCalendar } from "@/components/PhotoCalendar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { uploadStudentPhoto, removeStudentPhoto, useSignedPhotoUrls } from "@/lib/student-photos";
-import { useState } from "react";
 
 export const Route = createFileRoute("/aluno/comparacao")({
   head: () => ({ meta: [{ title: "Comparação Física — Rafael Faria" }] }),
@@ -43,7 +43,7 @@ function Comparacao() {
   const bySlot = (slot: number) => rows.find((r) => r.slot === slot) ?? null;
   const urls = useSignedPhotoUrls(rows.map((r) => r.photo_path));
 
-  const upsertMeta = useMutation({
+  const saveMeta = useMutation({
     mutationFn: async (payload: {
       slot: number;
       taken_on?: string | null;
@@ -97,9 +97,13 @@ function Comparacao() {
     await qc.invalidateQueries({ queryKey: ["physique-photos"] });
   };
 
-  const calendarLogs = rows
+  const calendarPhotos = rows
     .filter((r) => r.taken_on)
-    .map((r) => ({ completed_at: `${r.taken_on}T12:00:00` }));
+    .map((r) => ({
+      taken_on: r.taken_on as string,
+      url: r.photo_path ? (urls[r.photo_path] ?? null) : null,
+      label: r.label,
+    }));
 
   return (
     <Shell mode="student">
@@ -123,29 +127,17 @@ function Comparacao() {
                 const r = bySlot(slot);
                 const path = r?.photo_path ?? null;
                 return (
-                  <PhotoFrame
+                  <SlotCard
                     key={slot}
-                    label={`Foto ${slot + 1}`}
+                    slot={slot}
                     url={path ? (urls[path] ?? null) : null}
                     uploading={uploadingSlot === slot}
+                    initialDate={r?.taken_on ?? ""}
+                    initialLabel={r?.label ?? ""}
                     onPick={(file) => savePhoto(slot, file)}
                     onRemove={() => deletePhoto(slot)}
-                  >
-                    <input
-                      type="date"
-                      value={r?.taken_on ?? ""}
-                      onChange={(e) =>
-                        upsertMeta.mutate({ slot, taken_on: e.target.value || null })
-                      }
-                      className="mt-2 w-full rounded-md border border-border bg-card/70 px-2 py-1.5 text-[11px] font-mono outline-none transition-colors focus:border-primary"
-                    />
-                    <input
-                      value={r?.label ?? ""}
-                      onChange={(e) => upsertMeta.mutate({ slot, label: e.target.value || null })}
-                      placeholder="Rótulo (ex: Mês 1)"
-                      className="mt-1.5 w-full rounded-md border border-border bg-card/70 px-2 py-1.5 text-[11px] outline-none transition-colors focus:border-primary"
-                    />
-                  </PhotoFrame>
+                    onSave={(payload) => saveMeta.mutate({ slot, ...payload })}
+                  />
                 );
               })}
             </div>
@@ -154,11 +146,66 @@ function Comparacao() {
           <section className="mt-8 animate-reveal [animation-delay:100ms]">
             <div className="rounded-3xl border border-border bg-card/75 p-5 shadow-2xl backdrop-blur-xl sm:p-8">
               <h2 className="text-lg font-extrabold uppercase mb-6">Calendário das fotos</h2>
-              <TrainingCalendar logs={calendarLogs} legend="Foto" />
+              <PhotoCalendar photos={calendarPhotos} />
             </div>
           </section>
         </>
       )}
     </Shell>
+  );
+}
+
+/**
+ * Cartão de um slot. Mantém estado local da data e do rótulo para que digitar
+ * não seja interrompido pelos refetches (a data salva ao escolher; o rótulo
+ * salva ao sair do campo).
+ */
+function SlotCard({
+  slot,
+  url,
+  uploading,
+  initialDate,
+  initialLabel,
+  onPick,
+  onRemove,
+  onSave,
+}: {
+  slot: number;
+  url: string | null;
+  uploading: boolean;
+  initialDate: string;
+  initialLabel: string;
+  onPick: (file: File) => void;
+  onRemove: () => void;
+  onSave: (payload: { taken_on?: string | null; label?: string | null }) => void;
+}) {
+  const [date, setDate] = useState(initialDate);
+  const [label, setLabel] = useState(initialLabel);
+
+  return (
+    <PhotoFrame
+      label={`Foto ${slot + 1}`}
+      url={url}
+      uploading={uploading}
+      onPick={onPick}
+      onRemove={onRemove}
+    >
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => {
+          setDate(e.target.value);
+          onSave({ taken_on: e.target.value || null });
+        }}
+        className="mt-2 w-full rounded-md border border-border bg-card/70 px-2 py-1.5 text-[11px] font-mono outline-none transition-colors focus:border-primary"
+      />
+      <input
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        onBlur={() => onSave({ label: label.trim() || null })}
+        placeholder="Rótulo (ex: Mês 1)"
+        className="mt-1.5 w-full rounded-md border border-border bg-card/70 px-2 py-1.5 text-[11px] outline-none transition-colors focus:border-primary"
+      />
+    </PhotoFrame>
   );
 }

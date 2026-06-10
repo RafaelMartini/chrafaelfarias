@@ -6,6 +6,8 @@ import logo from "@/assets/logo-rafael-faria.png";
 const adminNav = [
   { label: "Dashboard", to: "/dashboard" },
   { label: "Alunos", to: "/alunos" },
+  { label: "Anamnese", to: "/anamneses" },
+  { label: "Comparação", to: "/comparacoes" },
   { label: "Biblioteca", to: "/biblioteca" },
   { label: "Agenda", to: "/agenda" },
 ];
