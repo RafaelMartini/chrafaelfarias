@@ -174,7 +174,7 @@ function AlunoPage() {
                           {embed ? (
                             <iframe src={embed} title={ex?.name} className="aspect-video h-full w-full md:aspect-square" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
                           ) : ex?.video_url ? (
-                            <video src={ex.video_url} controls className="aspect-video h-full w-full bg-black md:aspect-square" />
+                            <video src={ex.video_url} controls playsInline preload="metadata" className="aspect-video h-full w-full bg-black md:aspect-square" />
                           ) : (
                             <div className="grid aspect-video place-items-center md:aspect-square">
                               <span className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest">sem vídeo</span>

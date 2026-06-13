@@ -1,7 +1,8 @@
 /**
  * Converte uma URL de YouTube/Vimeo na URL de embed (iframe).
- * Retorna null se a URL for vazia/ inválida; devolve a própria URL se já
- * for um link de embed direto.
+ * Retorna null para qualquer outra URL (ex.: vídeo no Supabase Storage),
+ * que deve ser reproduzida com a tag <video> — um iframe não toca
+ * arquivos .mov e quebra a exibição no desktop.
  */
 export function embedUrl(url: string | null | undefined): string | null {
   if (!url) return null;
@@ -21,7 +22,7 @@ export function embedUrl(url: string | null | undefined): string | null {
       const id = u.pathname.split("/").filter(Boolean)[0];
       if (id) return `https://player.vimeo.com/video/${id}`;
     }
-    return url;
+    return null;
   } catch {
     return null;
   }

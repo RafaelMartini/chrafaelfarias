@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -44,7 +44,11 @@ function BibliotecaPage() {
   });
 
   const delMut = useMutation({
-    mutationFn: (id: string) => del({ data: { id } }),
+    mutationFn: async (ex: Exercise) => {
+      await del({ data: { id: ex.id } });
+      // Apaga também o arquivo do Storage pra não acumular vídeo órfão.
+      await removeVideoFromStorage(ex.video_url);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-exercises"] });
       toast.success("Exercício excluído");
@@ -124,7 +128,7 @@ function BibliotecaPage() {
                 {embed ? (
                   <iframe src={embed} title={e.name} className="h-full w-full" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
                 ) : e.video_url ? (
-                  <video src={e.video_url} controls className="h-full w-full bg-black" />
+                  <video src={e.video_url} controls playsInline preload="metadata" className="h-full w-full bg-black" />
                 ) : (
                   <div className="grid h-full w-full place-items-center text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Sem vídeo</div>
                 )}
@@ -171,7 +175,7 @@ function BibliotecaPage() {
         confirmLabel="Excluir"
         destructive
         onConfirm={() => {
-          if (toDelete) delMut.mutate(toDelete.id);
+          if (toDelete) delMut.mutate(toDelete);
           setToDelete(null);
         }}
       />
@@ -185,11 +189,39 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
   const create = useServerFn(createExercise);
   const update = useServerFn(updateExercise);
   const isEdit = !!exercise;
-  const [form, setForm] = useState({
-    name: exercise?.name ?? "",
-    muscle_group: exercise?.muscle_group ?? "",
-    description: exercise?.description ?? "",
-    video_url: exercise?.video_url ?? "",
+  const draftKey = !isEdit && user ? `exercise-draft:${user.id}` : null;
+  const restoredDraft = useRef(false);
+  const [form, setForm] = useState(() => {
+    // No celular o navegador pode recarregar a página ao abrir a câmera/galeria;
+    // o rascunho em localStorage garante que nada se perde no caminho.
+    if (draftKey) {
+      try {
+        const raw = localStorage.getItem(draftKey);
+        if (raw) {
+          const d = JSON.parse(raw);
+          if (d?.form?.name || d?.form?.video_url) {
+            restoredDraft.current = true;
+            return d.form as { name: string; muscle_group: string; description: string; video_url: string };
+          }
+        }
+      } catch { /* rascunho corrompido: ignora */ }
+    }
+    return {
+      name: exercise?.name ?? "",
+      muscle_group: exercise?.muscle_group ?? "",
+      description: exercise?.description ?? "",
+      video_url: exercise?.video_url ?? "",
+    };
+  });
+  // Caminho no Storage do vídeo enviado nesta sessão e ainda não salvo no banco
+  // (usado pra apagar o arquivo se o cadastro for descartado).
+  const [unsavedPath, setUnsavedPath] = useState<string | null>(() => {
+    if (draftKey && restoredDraft.current) {
+      try {
+        return (JSON.parse(localStorage.getItem(draftKey) ?? "{}").unsavedPath as string) ?? null;
+      } catch { return null; }
+    }
+    return null;
   });
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -197,16 +229,42 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
   // Todo vídeo agora é arquivo enviado pra nuvem (sem mais colar link de YouTube/Vimeo).
   const isUploaded = !!form.video_url;
 
+  useEffect(() => {
+    if (restoredDraft.current) toast.info("Rascunho recuperado", { description: "Continuando o cadastro de onde você parou." });
+  }, []);
+
+  useEffect(() => {
+    if (!draftKey) return;
+    const empty = !form.name && !form.muscle_group && !form.description && !form.video_url;
+    if (empty) localStorage.removeItem(draftKey);
+    else localStorage.setItem(draftKey, JSON.stringify({ form, unsavedPath }));
+  }, [draftKey, form, unsavedPath]);
+
+  const clearDraft = () => draftKey && localStorage.removeItem(draftKey);
+
   const mut = useMutation({
     mutationFn: () =>
       isEdit ? update({ data: { id: exercise!.id, ...form } }) : create({ data: form }),
     onSuccess: () => {
+      // Vídeo agora está referenciado pelo exercício; se trocou o vídeo de um
+      // exercício existente, o arquivo antigo vira lixo e pode ser removido.
+      if (isEdit && exercise?.video_url && exercise.video_url !== form.video_url) {
+        void removeVideoFromStorage(exercise.video_url);
+      }
+      clearDraft();
       qc.invalidateQueries({ queryKey: ["my-exercises"] });
       toast.success(isEdit ? "Exercício atualizado" : "Exercício cadastrado", { description: form.name });
       onClose();
     },
     onError: (e: Error) => toast.error(isEdit ? "Erro ao salvar" : "Erro ao cadastrar", { description: e.message }),
   });
+
+  const handleCancel = () => {
+    // Descarte explícito: apaga o vídeo que subiu mas não foi salvo em exercício.
+    if (unsavedPath) void supabase.storage.from(BUCKET).remove([unsavedPath]).catch(() => {});
+    clearDraft();
+    onClose();
+  };
 
   const onUpload = async (file: File) => {
     if (!user) return;
@@ -217,41 +275,76 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
       toast.error("Selecione um arquivo de vídeo");
       return;
     }
+    if (file.size > MAX_VIDEO_BYTES) {
+      toast.error("Vídeo muito grande", {
+        description: `O arquivo tem ${Math.round(file.size / 1024 / 1024)} MB e o limite é ${MAX_VIDEO_BYTES / 1024 / 1024} MB. Grave um vídeo mais curto ou reduza a qualidade.`,
+      });
+      return;
+    }
     setUploading(true);
     setProgress(0);
     try {
-      const { data: sess } = await supabase.auth.getSession();
-      const token = sess.session?.access_token;
       const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
       const APIKEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
       const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
       const contentType = file.type || mimeForExt(ext);
       const path = `${user.id}/${Date.now()}.${ext}`;
 
-      // XHR direto no Storage pra ter evento de progresso (o supabase.upload não expõe %).
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", `${SUPA_URL}/storage/v1/object/exercise-videos/${path}`);
-        xhr.setRequestHeader("authorization", `Bearer ${token}`);
-        xhr.setRequestHeader("apikey", APIKEY);
-        xhr.setRequestHeader("x-upsert", "false");
-        xhr.setRequestHeader("content-type", contentType);
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
-        };
-        xhr.onload = () =>
-          xhr.status >= 200 && xhr.status < 300
-            ? resolve()
-            : reject(new Error(
-                xhr.status === 413
-                  ? "Vídeo muito grande — reduza o tamanho ou aumente o limite no Supabase"
-                  : `Upload falhou (${xhr.status})`,
+      // Rede de celular oscila: tenta até 3 vezes antes de desistir.
+      const MAX_ATTEMPTS = 3;
+      for (let attempt = 1; ; attempt++) {
+        try {
+          // Token é buscado a cada tentativa — getSession renova se expirou
+          // (upload longo ou app que ficou em segundo plano).
+          const { data: sess } = await supabase.auth.getSession();
+          const token = sess.session?.access_token;
+          if (!token) {
+            throw Object.assign(new Error("Sessão expirada — entre novamente e repita o envio"), { fatal: true });
+          }
+          // XHR direto no Storage pra ter evento de progresso (o supabase.upload não expõe %).
+          await new Promise<void>((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", `${SUPA_URL}/storage/v1/object/${BUCKET}/${path}`);
+            xhr.setRequestHeader("authorization", `Bearer ${token}`);
+            xhr.setRequestHeader("apikey", APIKEY);
+            // Numa retentativa o arquivo pode ter chegado inteiro sem a resposta
+            // chegar até nós; upsert evita erro de "já existe".
+            xhr.setRequestHeader("x-upsert", attempt > 1 ? "true" : "false");
+            xhr.setRequestHeader("content-type", contentType);
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
+            };
+            xhr.onload = () => {
+              if (xhr.status >= 200 && xhr.status < 300) return resolve();
+              const fatal = [400, 401, 403, 413].includes(xhr.status);
+              reject(Object.assign(
+                new Error(
+                  xhr.status === 413
+                    ? "Vídeo muito grande — reduza o tamanho ou aumente o limite no Supabase"
+                    : `Upload falhou (${xhr.status})`,
+                ),
+                { fatal },
               ));
-        xhr.onerror = () => reject(new Error("Erro de rede no upload"));
-        xhr.send(file);
-      });
+            };
+            xhr.onerror = () => reject(new Error("Erro de rede no upload"));
+            xhr.ontimeout = () => reject(new Error("Tempo esgotado no upload"));
+            xhr.send(file);
+          });
+          break;
+        } catch (err) {
+          if ((err as { fatal?: boolean }).fatal || attempt >= MAX_ATTEMPTS) throw err;
+          setProgress(0);
+          toast.info(`Conexão instável — tentando de novo (${attempt + 1}/${MAX_ATTEMPTS})…`);
+          await new Promise((r) => setTimeout(r, 1500 * attempt));
+        }
+      }
 
-      const { data } = supabase.storage.from("exercise-videos").getPublicUrl(path);
+      // Substituiu um vídeo que ainda não tinha sido salvo? Apaga o anterior.
+      if (unsavedPath && unsavedPath !== path) {
+        void supabase.storage.from(BUCKET).remove([unsavedPath]).catch(() => {});
+      }
+      const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+      setUnsavedPath(path);
       setForm((f) => ({ ...f, video_url: data.publicUrl }));
       setProgress(100);
       toast.success("Vídeo enviado");
@@ -263,9 +356,16 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-extrabold uppercase tracking-tight">{isEdit ? "Editar Exercício" : "Novo Exercício"}</h2>
+    // Tocar fora NÃO fecha o modal: no celular era fácil demais perder o
+    // cadastro inteiro (vídeo já enviado) com um toque acidental.
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-start justify-between gap-4">
+          <h2 className="text-2xl font-extrabold uppercase tracking-tight">{isEdit ? "Editar Exercício" : "Novo Exercício"}</h2>
+          <button type="button" onClick={handleCancel} aria-label="Fechar" className="rounded-full border border-border p-2 text-muted-foreground transition-colors hover:border-destructive hover:text-destructive">
+            <X className="size-4" />
+          </button>
+        </div>
         <form
           onSubmit={(e) => { e.preventDefault(); mut.mutate(); }}
           className="mt-6 space-y-3"
@@ -286,14 +386,20 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
                   </span>
                   <button
                     type="button"
-                    onClick={() => setForm((f) => ({ ...f, video_url: "" }))}
+                    onClick={() => {
+                      if (unsavedPath) {
+                        void supabase.storage.from(BUCKET).remove([unsavedPath]).catch(() => {});
+                        setUnsavedPath(null);
+                      }
+                      setForm((f) => ({ ...f, video_url: "" }));
+                    }}
                     className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground transition-colors hover:text-destructive"
                   >
                     <X className="size-3" /> Remover
                   </button>
                 </div>
                 <div className="overflow-hidden rounded-md border border-border bg-black aspect-video">
-                  <video src={form.video_url} controls className="h-full w-full" />
+                  <video src={form.video_url} controls playsInline preload="metadata" className="h-full w-full" />
                 </div>
               </div>
             ) : (
@@ -307,9 +413,14 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
                   {uploading ? <><Loader2 className="size-3.5 animate-spin" /> Enviando… {progress}%</> : <><Upload className="size-3.5" /> Enviar arquivo de vídeo</>}
                 </button>
                 {uploading && (
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border">
-                    <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
-                  </div>
+                  <>
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border">
+                      <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+                    </div>
+                    <p className="mt-1.5 text-[10px] font-mono text-muted-foreground">
+                      Mantenha esta tela aberta até o envio terminar.
+                    </p>
+                  </>
                 )}
               </>
             )}
@@ -325,15 +436,38 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
             />
           </div>
           <div className="flex gap-2 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 rounded-full border border-border py-3 text-[10px] font-mono uppercase tracking-widest hover:bg-secondary">Cancelar</button>
+            <button type="button" onClick={handleCancel} className="flex-1 rounded-full border border-border py-3 text-[10px] font-mono uppercase tracking-widest hover:bg-secondary">Cancelar</button>
             <button type="submit" disabled={mut.isPending || uploading} className="flex-1 rounded-full bg-primary py-3 text-[10px] font-extrabold uppercase tracking-widest text-primary-foreground disabled:opacity-50">
-              {mut.isPending ? "Salvando..." : isEdit ? "Salvar" : "Cadastrar"}
+              {mut.isPending ? "Salvando..." : uploading ? "Enviando vídeo…" : isEdit ? "Salvar" : "Cadastrar"}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
+}
+
+const BUCKET = "exercise-videos";
+// Mesmo limite configurado no bucket do Supabase (500 MB) — barrar aqui evita
+// gastar minutos de upload pra receber um 413 no final.
+const MAX_VIDEO_BYTES = 500 * 1024 * 1024;
+
+// Extrai o caminho dentro do bucket a partir da URL pública salva no banco.
+function storagePathFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const marker = `/object/public/${BUCKET}/`;
+  const i = url.indexOf(marker);
+  return i === -1 ? null : decodeURIComponent(url.slice(i + marker.length));
+}
+
+async function removeVideoFromStorage(url: string | null | undefined) {
+  const path = storagePathFromUrl(url);
+  if (!path) return;
+  try {
+    await supabase.storage.from(BUCKET).remove([path]);
+  } catch {
+    // Limpeza é melhor esforço — nunca bloqueia o fluxo principal.
+  }
 }
 
 // Fallback de content-type quando o navegador não informa file.type (comum em .mov).
