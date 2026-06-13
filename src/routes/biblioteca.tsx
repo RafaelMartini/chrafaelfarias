@@ -225,9 +225,34 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
   });
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [link, setLink] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-  // Todo vídeo agora é arquivo enviado pra nuvem (sem mais colar link de YouTube/Vimeo).
+  // O vídeo pode ser um link (YouTube/Vimeo) OU um arquivo enviado pra nuvem.
   const isUploaded = !!form.video_url;
+  const embedPreview = embedUrl(form.video_url);
+
+  // Limpa o vídeo atual (e apaga do Storage se foi um arquivo ainda não salvo).
+  const clearVideo = () => {
+    if (unsavedPath) {
+      void supabase.storage.from(BUCKET).remove([unsavedPath]).catch(() => {});
+      setUnsavedPath(null);
+    }
+    setForm((f) => ({ ...f, video_url: "" }));
+  };
+
+  // Aceita um link do YouTube/Vimeo colado pelo treinador.
+  const applyLink = () => {
+    const v = link.trim();
+    if (!v) return;
+    if (!embedUrl(v)) {
+      toast.error("Link inválido", { description: "Cole o endereço de um vídeo do YouTube ou Vimeo." });
+      return;
+    }
+    clearVideo();
+    setForm((f) => ({ ...f, video_url: v }));
+    setLink("");
+    toast.success("Link do vídeo adicionado");
+  };
 
   useEffect(() => {
     if (restoredDraft.current) toast.info("Rascunho recuperado", { description: "Continuando o cadastro de onde você parou." });
@@ -276,8 +301,8 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
       return;
     }
     if (file.size > MAX_VIDEO_BYTES) {
-      toast.error("Vídeo muito grande", {
-        description: `O arquivo tem ${Math.round(file.size / 1024 / 1024)} MB e o limite é ${MAX_VIDEO_BYTES / 1024 / 1024} MB. Grave um vídeo mais curto ou reduza a qualidade.`,
+      toast.error("Vídeo muito grande para upload direto", {
+        description: `O arquivo tem ${Math.round(file.size / 1024 / 1024)} MB (limite de ${MAX_VIDEO_BYTES / 1024 / 1024} MB). Suba no YouTube e cole o link — sem limite de tamanho.`,
       });
       return;
     }
@@ -382,56 +407,87 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
           <Field label="Nome" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
           <Field label="Grupo muscular" value={form.muscle_group} onChange={(v) => setForm({ ...form, muscle_group: v })} placeholder="Ex: Peitoral" />
 
-          {/* Vídeo: upload de arquivo (.mp4, .mov, etc.) */}
+          {/* Vídeo: link do YouTube/Vimeo (recomendado) ou upload de arquivo */}
           <div>
             <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Vídeo de execução</label>
             <input ref={fileRef} type="file" accept="video/*,.mp4,.mov,.m4v,.webm,.mkv,.avi,.3gp" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); }} />
             {isUploaded ? (
-              // Arquivo já enviado: mostra status + preview, sem expor a URL do banco.
+              // Vídeo definido: mostra status + preview, sem expor a URL do banco.
               <div className="mt-1 space-y-2">
                 <div className="flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2">
                   <span className="flex items-center gap-1.5 text-[10px] font-mono uppercase text-primary">
-                    <Check className="size-3.5" /> Vídeo enviado
+                    <Check className="size-3.5" /> {embedPreview ? "Link do vídeo adicionado" : "Vídeo enviado"}
                   </span>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (unsavedPath) {
-                        void supabase.storage.from(BUCKET).remove([unsavedPath]).catch(() => {});
-                        setUnsavedPath(null);
-                      }
-                      setForm((f) => ({ ...f, video_url: "" }));
-                    }}
+                    onClick={clearVideo}
                     className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground transition-colors hover:text-destructive"
                   >
                     <X className="size-3" /> Remover
                   </button>
                 </div>
                 <div className="overflow-hidden rounded-md border border-border bg-black aspect-video">
-                  <video src={form.video_url} controls playsInline preload="metadata" className="h-full w-full" />
+                  {embedPreview ? (
+                    <iframe src={embedPreview} title="Prévia do vídeo" className="h-full w-full" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+                  ) : (
+                    <video src={form.video_url} controls playsInline preload="metadata" className="h-full w-full" />
+                  )}
                 </div>
               </div>
             ) : (
-              <>
+              <div className="mt-1 space-y-3">
+                {/* Opção recomendada: colar link do YouTube */}
+                <div>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      inputMode="url"
+                      value={link}
+                      onChange={(e) => setLink(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyLink(); } }}
+                      placeholder="Cole o link do YouTube…"
+                      className="min-w-0 flex-1 rounded-md border border-border bg-card/70 px-3 py-2 font-mono text-sm outline-none transition-colors focus:border-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={applyLink}
+                      disabled={!link.trim()}
+                      className="shrink-0 rounded-md bg-primary px-4 text-[10px] font-extrabold uppercase tracking-widest text-primary-foreground transition-opacity disabled:opacity-40"
+                    >
+                      Usar
+                    </button>
+                  </div>
+                  <p className="mt-1.5 text-[10px] font-mono text-muted-foreground">
+                    Suba o vídeo no YouTube (pode ser “não listado”) e cole o link aqui.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">ou</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+
+                {/* Opção secundária: upload direto (até ~50 MB) */}
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}
-                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border py-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
+                  className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border py-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
                 >
-                  {uploading ? <><Loader2 className="size-3.5 animate-spin" /> Enviando… {progress}%</> : <><Upload className="size-3.5" /> Enviar arquivo de vídeo</>}
+                  {uploading ? <><Loader2 className="size-3.5 animate-spin" /> Enviando… {progress}%</> : <><Upload className="size-3.5" /> Enviar arquivo (vídeo curto, até 50 MB)</>}
                 </button>
                 {uploading && (
                   <>
-                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
                       <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
                     </div>
-                    <p className="mt-1.5 text-[10px] font-mono text-muted-foreground">
+                    <p className="text-[10px] font-mono text-muted-foreground">
                       Mantenha esta tela aberta até o envio terminar.
                     </p>
                   </>
                 )}
-              </>
+              </div>
             )}
           </div>
 
@@ -457,9 +513,11 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
 }
 
 const BUCKET = "exercise-videos";
-// Mesmo limite configurado no bucket do Supabase (500 MB) — barrar aqui evita
-// gastar minutos de upload pra receber um 413 no final.
-const MAX_VIDEO_BYTES = 500 * 1024 * 1024;
+// Limite real do plano do Supabase: arquivos acima de 50 MB são recusados
+// (HTTP 400 "Payload too large"). Barrar aqui dá uma mensagem clara na hora,
+// em vez de deixar o envio rodar minutos e falhar no fim. Para vídeos maiores,
+// use o link do YouTube.
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
 // Extrai o caminho dentro do bucket a partir da URL pública salva no banco.
 function storagePathFromUrl(url: string | null | undefined): string | null {
