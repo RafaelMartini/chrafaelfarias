@@ -240,12 +240,15 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
     setForm((f) => ({ ...f, video_url: "" }));
   };
 
-  // Aceita um link do YouTube/Vimeo colado pelo treinador.
+  // Aceita um link do YouTube/Vimeo colado pelo treinador — seja o endereço
+  // puro ou o código <iframe ... src="..."> inteiro do botão "Incorporar".
   const applyLink = () => {
-    const v = link.trim();
-    if (!v) return;
+    const raw = link.trim();
+    if (!raw) return;
+    const iframeSrc = raw.match(/<iframe[^>]*\ssrc=["']([^"']+)["']/i);
+    const v = iframeSrc ? iframeSrc[1] : raw;
     if (!embedUrl(v)) {
-      toast.error("Link inválido", { description: "Cole o endereço de um vídeo do YouTube ou Vimeo." });
+      toast.error("Link inválido", { description: "Cole o endereço (ou o código de incorporar) de um vídeo do YouTube ou Vimeo." });
       return;
     }
     clearVideo();
