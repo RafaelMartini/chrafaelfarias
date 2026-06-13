@@ -292,14 +292,16 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
 
       // Rede de celular oscila: tenta até 3 vezes antes de desistir.
       const MAX_ATTEMPTS = 3;
+      let forceRefresh = false; // vira true depois de uma falha de autenticação
       for (let attempt = 1; ; attempt++) {
         try {
-          // Token é buscado a cada tentativa — getSession renova se expirou
-          // (upload longo ou app que ficou em segundo plano).
-          const { data: sess } = await supabase.auth.getSession();
-          const token = sess.session?.access_token;
+          // Garante um token VÁLIDO a cada tentativa. No celular o app vai pra
+          // segundo plano e o auto-refresh do Supabase não dispara, então o
+          // getSession devolve um token vencido — aí o auth.uid() some e o
+          // Storage rejeita o upload com "row-level security" (HTTP 400/403).
+          const token = await getValidAccessToken(forceRefresh);
           if (!token) {
-            throw Object.assign(new Error("Sessão expirada — entre novamente e repita o envio"), { fatal: true });
+            throw Object.assign(new Error("Sessão expirada — saia e entre de novo, depois repita o envio"), { fatal: true });
           }
           // XHR direto no Storage pra ter evento de progresso (o supabase.upload não expõe %).
           await new Promise<void>((resolve, reject) => {
@@ -316,14 +318,18 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
             };
             xhr.onload = () => {
               if (xhr.status >= 200 && xhr.status < 300) return resolve();
-              const fatal = [400, 401, 403, 413].includes(xhr.status);
+              // O Storage devolve falha de RLS/permissão como HTTP 400 ou 403,
+              // mas é resolvível renovando o token — não é fatal de cara.
+              const isAuth = [400, 401, 403].includes(xhr.status) && /row-level security|jwt|token|unauthorized/i.test(xhr.responseText || "");
               reject(Object.assign(
                 new Error(
                   xhr.status === 413
                     ? "Vídeo muito grande — reduza o tamanho ou aumente o limite no Supabase"
-                    : `Upload falhou (${xhr.status})`,
+                    : isAuth
+                      ? "Sessão expirada durante o envio"
+                      : `Upload falhou (${xhr.status})`,
                 ),
-                { fatal },
+                { fatal: xhr.status === 413, auth: isAuth },
               ));
             };
             xhr.onerror = () => reject(new Error("Erro de rede no upload"));
@@ -332,10 +338,13 @@ function ExerciseModal({ exercise, onClose }: { exercise?: Exercise; onClose: ()
           });
           break;
         } catch (err) {
-          if ((err as { fatal?: boolean }).fatal || attempt >= MAX_ATTEMPTS) throw err;
+          const e = err as { fatal?: boolean; auth?: boolean };
+          // Falha de autenticação: força renovar o token e tenta de novo.
+          if (e.auth) forceRefresh = true;
+          if (e.fatal || attempt >= MAX_ATTEMPTS) throw err;
           setProgress(0);
-          toast.info(`Conexão instável — tentando de novo (${attempt + 1}/${MAX_ATTEMPTS})…`);
-          await new Promise((r) => setTimeout(r, 1500 * attempt));
+          toast.info(e.auth ? "Renovando sessão e reenviando…" : `Conexão instável — tentando de novo (${attempt + 1}/${MAX_ATTEMPTS})…`);
+          await new Promise((r) => setTimeout(r, e.auth ? 300 : 1500 * attempt));
         }
       }
 
@@ -458,6 +467,21 @@ function storagePathFromUrl(url: string | null | undefined): string | null {
   const marker = `/object/public/${BUCKET}/`;
   const i = url.indexOf(marker);
   return i === -1 ? null : decodeURIComponent(url.slice(i + marker.length));
+}
+
+// Devolve um access_token válido, renovando a sessão se já venceu ou está
+// perto de vencer (ou se `force` for true após uma rejeição de auth). Resolve
+// o gargalo nº1 de upload pelo celular: token vencido em segundo plano.
+async function getValidAccessToken(force = false): Promise<string | null> {
+  const { data } = await supabase.auth.getSession();
+  const session = data.session;
+  const expiresAt = session?.expires_at ? session.expires_at * 1000 : 0;
+  // Margem de 2 min: uploads em 4G podem levar um tempo até o token ser checado.
+  const expiringSoon = expiresAt > 0 && expiresAt < Date.now() + 120_000;
+  if (session && !force && !expiringSoon) return session.access_token;
+  const { data: refreshed, error } = await supabase.auth.refreshSession();
+  if (error || !refreshed.session) return session?.access_token ?? null;
+  return refreshed.session.access_token;
 }
 
 async function removeVideoFromStorage(url: string | null | undefined) {
