@@ -8,6 +8,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useRequireTrainer } from "@/hooks/use-require-role";
 import { KeyRound, Copy, RefreshCw } from "lucide-react";
 import { TrainingCalendar } from "@/components/TrainingCalendar";
+import { ExerciseCombobox } from "@/components/ExerciseCombobox";
 import {
   getStudentWithWorkouts,
   createWorkout,
@@ -463,6 +464,10 @@ function WorkoutCard({
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            if (!form.exerciseId) {
+              toast.error("Selecione um exercício");
+              return;
+            }
             addMut.mutate();
           }}
           className="mt-4 grid grid-cols-2 md:grid-cols-6 gap-2 items-end rounded-2xl border border-border bg-background/40 p-3"
@@ -471,19 +476,11 @@ function WorkoutCard({
             <label className="text-[10px] font-mono uppercase text-muted-foreground">
               Exercício
             </label>
-            <select
-              required
+            <ExerciseCombobox
+              options={exercises}
               value={form.exerciseId}
-              onChange={(e) => setForm({ ...form, exerciseId: e.target.value })}
-              className="mt-1 w-full rounded-md border border-border bg-card px-2 py-2 text-sm font-mono"
-            >
-              <option value="">Selecionar…</option>
-              {exercises.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.name}
-                </option>
-              ))}
-            </select>
+              onChange={(id) => setForm({ ...form, exerciseId: id })}
+            />
           </div>
           <NumField
             label="Séries"
